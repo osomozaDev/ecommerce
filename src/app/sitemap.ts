@@ -5,7 +5,7 @@ import { getCommerce } from "@/lib/commerce/provider";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tenant = getTenant();
   const commerce = getCommerce();
-  const [products, collections] = await Promise.all([
+  const [{ products }, collections] = await Promise.all([
     commerce.getProducts({ first: 100 }),
     commerce.getCollections(),
   ]);

@@ -51,17 +51,27 @@ function unwrapCart(payload: CartMutationPayload, operation: string): ShopifyCar
 export const shopifyProvider: CommerceProvider = {
   async getProducts(options?: GetProductsOptions) {
     const sort = options?.sort ? SORT_MAP[options.sort] : undefined;
-    const data = await shopifyFetch<{ products: { nodes: ShopifyProduct[] } }>({
+    const data = await shopifyFetch<{
+      products: {
+        nodes: ShopifyProduct[];
+        pageInfo: { hasNextPage: boolean; endCursor: string | null };
+      };
+    }>({
       query: GET_PRODUCTS_QUERY,
       variables: {
         first: options?.first ?? 24,
+        after: options?.after,
         query: options?.query,
         sortKey: sort?.sortKey,
         reverse: sort?.reverse,
       },
       tags: [CACHE_TAGS.products],
     });
-    return data.products.nodes.map(mapProduct);
+    return {
+      products: data.products.nodes.map(mapProduct),
+      hasNextPage: data.products.pageInfo.hasNextPage,
+      endCursor: data.products.pageInfo.endCursor,
+    };
   },
 
   async getProduct(handle) {

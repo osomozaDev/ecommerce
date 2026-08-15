@@ -63,6 +63,14 @@ export interface Product {
   seo: Seo;
 }
 
+/** Página de resultados de catálogo con cursor de continuación. */
+export interface ProductList {
+  products: Product[];
+  hasNextPage: boolean;
+  /** Cursor para pedir la página siguiente (null si no hay más). */
+  endCursor: string | null;
+}
+
 export interface Collection {
   id: string;
   handle: string;

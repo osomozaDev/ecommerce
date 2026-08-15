@@ -1,10 +1,12 @@
 import "server-only";
-import type { Cart, Collection, Product } from "./types";
+import type { Cart, Collection, Product, ProductList } from "./types";
 import { fixturesProvider } from "./fixtures/provider";
 import { shopifyProvider } from "./shopify/provider";
 
 export interface GetProductsOptions {
   first?: number;
+  /** Cursor de paginación: el endCursor de la página anterior. */
+  after?: string;
   /** Búsqueda de texto libre (sintaxis de Shopify en modo shopify). */
   query?: string;
   sort?: "latest" | "price-asc" | "price-desc";
@@ -21,7 +23,7 @@ export interface CartLineInput {
  * Se selecciona con COMMERCE_DATA_SOURCE=shopify|fixtures.
  */
 export interface CommerceProvider {
-  getProducts(options?: GetProductsOptions): Promise<Product[]>;
+  getProducts(options?: GetProductsOptions): Promise<ProductList>;
   getProduct(handle: string): Promise<Product | null>;
   getCollections(): Promise<Collection[]>;
   getCollection(

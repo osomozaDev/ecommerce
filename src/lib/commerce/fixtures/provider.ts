@@ -47,7 +47,17 @@ export const fixturesProvider: CommerceProvider = {
       products.sort((a, b) => a.price.amount - b.price.amount);
     if (options?.sort === "price-desc")
       products.sort((a, b) => b.price.amount - a.price.amount);
-    return products.slice(0, options?.first ?? 24);
+
+    // Cursor simulado: el offset como string (Shopify usa cursores opacos).
+    const offset = options?.after ? parseInt(options.after, 10) || 0 : 0;
+    const first = options?.first ?? 24;
+    const page = products.slice(offset, offset + first);
+    const end = offset + page.length;
+    return {
+      products: page,
+      hasNextPage: end < products.length,
+      endCursor: page.length > 0 ? String(end) : null,
+    };
   },
 
   async getProduct(handle) {
