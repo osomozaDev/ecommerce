@@ -38,3 +38,9 @@ jobs:
 
       - name: Build (incluye typecheck)
         run: pnpm build
+
+      - name: Instalar navegador de Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Tests e2e (flujo de compra)
+        run: pnpm test:e2e
