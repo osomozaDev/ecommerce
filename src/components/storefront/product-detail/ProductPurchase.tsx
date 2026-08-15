@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/lib/commerce/types";
 import { useCart } from "@/lib/cart/cart-context";
+import { trackAddToCart } from "@/lib/analytics/track";
 import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/ui/Price";
 
@@ -47,6 +48,7 @@ export function ProductPurchase({ product }: { product: Product }) {
   function handleAdd() {
     if (!variant) return;
     addItem(variant.id, quantity);
+    trackAddToCart(product, variant, quantity);
     setAdded(true);
     if (addedTimer.current) clearTimeout(addedTimer.current);
     addedTimer.current = setTimeout(() => setAdded(false), 2000);

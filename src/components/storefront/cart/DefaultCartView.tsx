@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart/cart-context";
+import { trackBeginCheckout, trackRemoveFromCart } from "@/lib/analytics/track";
 import { LinkButton, buttonClasses } from "@/components/ui/Button";
 
 /**
@@ -85,7 +86,10 @@ export function DefaultCartView() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => removeItem(line.id)}
+                  onClick={() => {
+                    trackRemoveFromCart(line);
+                    removeItem(line.id);
+                  }}
                   className="text-xs text-muted underline-offset-2 hover:text-ink hover:underline"
                 >
                   Eliminar
@@ -111,7 +115,11 @@ export function DefaultCartView() {
         <p className="text-xs text-muted">
           Envío e impuestos se calculan en el checkout.
         </p>
-        <a href={cart.checkoutUrl} className={buttonClasses("primary", "w-full")}>
+        <a
+          href={cart.checkoutUrl}
+          onClick={() => trackBeginCheckout(cart)}
+          className={buttonClasses("primary", "w-full")}
+        >
           Finalizar compra
         </a>
       </aside>

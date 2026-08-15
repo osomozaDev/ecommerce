@@ -122,6 +122,23 @@ diseña naming, copy, paleta accesible, tipografías, variantes y bloques; el
 script lo registra como una tienda más, nacida en fixtures. Requiere
 `ANTHROPIC_API_KEY` (o `ant auth login`) solo al ejecutarlo.
 
+### Analítica por tenant (fase 3)
+
+Capa propia de eventos ecommerce con esquema GA4 (`src/lib/analytics/`):
+`view_item`, `add_to_cart`, `remove_from_cart`, `begin_checkout` y `search`,
+emitidos desde la UI vía `track()`/helpers. Los eventos van SIEMPRE a
+`window.dataLayer` (compatible con Google Tag Manager y verificado en e2e sin
+vendor); los vendors se configuran por tenant en su JSON — ids públicos, no
+secretos:
+
+```json
+"analytics": { "ga4MeasurementId": "G-XXXXXXXXXX", "plausibleDomain": "tienda.com" }
+```
+
+Sin configuración no se carga ningún script externo. ⚠️ Si se activa un
+vendor para una tienda con tráfico UE, esa tienda necesita banner de
+consentimiento antes de producción (pieza de plataforma pendiente).
+
 ### Alta de tienda nueva (provisioning)
 
 ```bash

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart/cart-context";
+import { trackBeginCheckout, trackRemoveFromCart } from "@/lib/analytics/track";
 import { buttonClasses } from "@/components/ui/Button";
 
 /**
@@ -130,7 +131,10 @@ export function CartWidget() {
                           </div>
                           <button
                             type="button"
-                            onClick={() => removeItem(line.id)}
+                            onClick={() => {
+                              trackRemoveFromCart(line);
+                              removeItem(line.id);
+                            }}
                             className="text-xs text-muted underline-offset-2 hover:text-ink hover:underline"
                           >
                             Eliminar
@@ -148,7 +152,11 @@ export function CartWidget() {
                       {cart.subtotal.formatted}
                     </span>
                   </div>
-                  <a href={cart.checkoutUrl} className={buttonClasses("primary", "w-full")}>
+                  <a
+                    href={cart.checkoutUrl}
+                    onClick={() => trackBeginCheckout(cart)}
+                    className={buttonClasses("primary", "w-full")}
+                  >
                     Finalizar compra
                   </a>
                   <Link

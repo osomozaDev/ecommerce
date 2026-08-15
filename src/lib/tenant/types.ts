@@ -28,6 +28,17 @@ export interface TenantConfig {
     name: string;
     tagline?: string;
   };
+  /**
+   * Medición por tenant (ids públicos, no son secretos). Si se define un
+   * vendor para una tienda de la UE, esa tienda necesita banner de
+   * consentimiento antes de salir a producción (pendiente de plataforma).
+   */
+  analytics?: {
+    /** GA4, ej. "G-XXXXXXXXXX". */
+    ga4MeasurementId?: string;
+    /** Dominio configurado en Plausible, ej. "tienda.com". */
+    plausibleDomain?: string;
+  };
   theme: ThemeConfig;
   pages: {
     homepage: Block[];

@@ -7,6 +7,7 @@ import { Header } from "@/components/storefront/header";
 import { Footer } from "@/components/storefront/footer";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { organizationJsonLd } from "@/lib/seo/jsonld";
+import { AnalyticsScripts } from "@/lib/analytics/AnalyticsScripts";
 
 /**
  * Layout del storefront: resuelve tenant, carrito inicial (cookie) y
@@ -29,6 +30,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
   return (
     <CartProvider initialCart={initialCart}>
       <JsonLd data={organizationJsonLd(tenant)} />
+      <AnalyticsScripts tenant={tenant} />
       <Header shopName={tenant.branding.name} nav={nav} />
       <main className="flex-1">{children}</main>
       <Footer

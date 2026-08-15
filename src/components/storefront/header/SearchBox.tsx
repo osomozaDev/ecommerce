@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { trackSearch } from "@/lib/analytics/track";
 
 /** Buscador del header: navega a /buscar?q=… (server-rendered). */
 export function SearchBox() {
@@ -14,7 +15,10 @@ export function SearchBox() {
       onSubmit={(e) => {
         e.preventDefault();
         const q = value.trim();
-        if (q) router.push(`/buscar?q=${encodeURIComponent(q)}`);
+        if (q) {
+          trackSearch(q);
+          router.push(`/buscar?q=${encodeURIComponent(q)}`);
+        }
       }}
     >
       <input

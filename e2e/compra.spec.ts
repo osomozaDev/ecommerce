@@ -82,6 +82,29 @@ test("los filtros de catálogo acotan los resultados", async ({ page }) => {
   await expect(page.getByRole("main").getByRole("link", { name: /Vela aromática/ })).toHaveCount(0);
 });
 
+test("los eventos de analítica llegan al dataLayer", async ({ page }) => {
+  await page.goto("/productos/vela-ambar");
+  await page.getByRole("button", { name: "Añadir al carrito" }).click();
+  await expect(page.getByRole("banner").getByRole("button", { name: /Carrito/ })).toContainText("1");
+
+  const eventos = await page.evaluate(
+    () => ((window as unknown as { dataLayer?: { event?: string }[] }).dataLayer ?? []).map((e) => e.event),
+  );
+  expect(eventos).toContain("view_item");
+  expect(eventos).toContain("add_to_cart");
+
+  const addEvent = await page.evaluate(() =>
+    ((window as unknown as { dataLayer?: Record<string, unknown>[] }).dataLayer ?? []).find(
+      (e) => e.event === "add_to_cart",
+    ),
+  );
+  expect(addEvent).toMatchObject({
+    currency: "EUR",
+    value: 24,
+    items: [{ item_name: "Vela aromática Ámbar", quantity: 1, price: 24 }],
+  });
+});
+
 test("el laboratorio de diseño funciona con fixtures", async ({ page }) => {
   await page.goto("/dev/design-system");
   await expect(page.getByRole("heading", { level: 1, name: "Design System" })).toBeVisible();

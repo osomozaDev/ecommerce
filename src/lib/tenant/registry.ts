@@ -85,6 +85,7 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     domains: Array.isArray(t.domains) ? (t.domains as string[]) : undefined,
     locale: typeof t.locale === "string" ? t.locale : "es-ES",
     branding: t.branding as TenantConfig["branding"],
+    analytics: t.analytics as TenantConfig["analytics"],
     theme,
     pages: { homepage },
     shopify: { storeDomain: shopify.storeDomain },

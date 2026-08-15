@@ -5,6 +5,7 @@ import { getCommerce } from "@/lib/commerce/provider";
 import { getTenant } from "@/lib/tenant/resolve";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { breadcrumbJsonLd, productBreadcrumb, productJsonLd } from "@/lib/seo/jsonld";
+import { TrackViewItem } from "@/lib/analytics/TrackViewItem";
 
 interface Props {
   params: Promise<{ handle: string }>;
@@ -35,6 +36,7 @@ export default async function ProductoPage({ params }: Props) {
     <>
       <JsonLd data={productJsonLd(product, tenant)} />
       <JsonLd data={breadcrumbJsonLd(productBreadcrumb(product), tenant)} />
+      <TrackViewItem product={product} />
       <ProductDetail product={product} />
     </>
   );
