@@ -1,0 +1,37 @@
+import type { ReactNode } from "react";
+import { getTenant } from "@/lib/tenant/resolve";
+import { getCommerce } from "@/lib/commerce/provider";
+import { getCartAction } from "@/lib/cart/actions";
+import { CartProvider } from "@/lib/cart/cart-context";
+import { Header } from "@/components/storefront/header";
+import { Footer } from "@/components/storefront/footer";
+
+/**
+ * Layout del storefront: resuelve tenant, carrito inicial (cookie) y
+ * navegación, y monta el CartProvider. Todo lo que hay debajo puede usar
+ * useCart() sin saber nada de Shopify.
+ */
+export default async function StorefrontLayout({ children }: { children: ReactNode }) {
+  const tenant = getTenant();
+  const [initialCart, collections] = await Promise.all([
+    getCartAction(),
+    getCommerce().getCollections(),
+  ]);
+
+  const nav = [
+    { label: "Productos", href: "/productos" },
+    ...collections.slice(0, 4).map((c) => ({ label: c.title, href: c.href })),
+  ];
+
+  return (
+    <CartProvider initialCart={initialCart}>
+      <Header shopName={tenant.branding.name} nav={nav} />
+      <main className="flex-1">{children}</main>
+      <Footer
+        shopName={tenant.branding.name}
+        tagline={tenant.branding.tagline}
+        nav={nav}
+      />
+    </CartProvider>
+  );
+}

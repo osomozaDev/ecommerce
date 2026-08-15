@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#E7D8B8"/>
+  <circle cx="400" cy="430" r="210" fill="#9C7C3C" opacity="0.85"/>
+  <rect x="250" y="640" width="300" height="130" rx="18" fill="#9C7C3C" opacity="0.35"/>
+  <text x="400" y="930" text-anchor="middle" font-family="system-ui, sans-serif" font-size="34" fill="#9C7C3C" opacity="0.7">Imagen de muestra 6</text>
+</svg>
