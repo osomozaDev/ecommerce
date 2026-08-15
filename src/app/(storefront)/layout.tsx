@@ -20,7 +20,8 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
 
   const nav = [
     { label: "Productos", href: "/productos" },
-    ...collections.slice(0, 4).map((c) => ({ label: c.title, href: c.href })),
+    { label: "Colecciones", href: "/colecciones" },
+    ...collections.slice(0, 3).map((c) => ({ label: c.title, href: c.href })),
   ];
 
   return (

@@ -25,6 +25,7 @@ export const themeA: ThemeConfig = {
     header: "default",
     hero: "editorial",
     productCard: "default",
+    collectionCard: "default",
     productGrid: "default",
     productDetail: "default",
     cart: "default",

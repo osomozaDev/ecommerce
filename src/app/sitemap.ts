@@ -13,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: tenant.domain, changeFrequency: "daily", priority: 1 },
     { url: `${tenant.domain}/productos`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${tenant.domain}/colecciones`, changeFrequency: "daily", priority: 0.8 },
   ];
 
   return [

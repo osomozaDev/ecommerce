@@ -10,6 +10,8 @@ import { Price } from "@/components/ui/Price";
 import { Header } from "@/components/storefront/header";
 import { Hero } from "@/components/storefront/hero";
 import { ProductCard } from "@/components/storefront/product-card";
+import { CollectionCard } from "@/components/storefront/collection-card";
+import { fixtureCollections } from "@/fixtures/collections";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { ProductDetail } from "@/components/storefront/product-detail";
 import { CartView } from "@/components/storefront/cart";
@@ -70,6 +72,7 @@ const secciones = [
   "header",
   "hero",
   "product-card",
+  "collection-card",
   "product-grid",
   "product-detail",
   "cart",
@@ -185,6 +188,24 @@ export default function DesignSystemPage() {
               <Muestra label="default · badge nuevo">
                 <div className="p-4">
                   <ProductCard variant="default" product={fixtureProducts[3]} />
+                </div>
+              </Muestra>
+            </div>
+          </Section>
+
+          <Section id="collection-card" title="Collection Card">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <Muestra label="default">
+                <div className="p-4">
+                  <CollectionCard variant="default" collection={fixtureCollections[0]} />
+                </div>
+              </Muestra>
+              <Muestra label="default · sin descripción">
+                <div className="p-4">
+                  <CollectionCard
+                    variant="default"
+                    collection={{ ...fixtureCollections[1], description: "" }}
+                  />
                 </div>
               </Muestra>
             </div>
