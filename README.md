@@ -4,6 +4,9 @@ Frontend ecommerce headless: **1 engine Next.js → N tiendas Shopify por
 configuración**. Shopify hace el commerce (catálogo, carrito, checkout,
 pagos); este proyecto hace la experiencia (frontend, branding, SEO).
 
+**Producción**: https://ecommerce-one-theta-33.vercel.app
+(tienda `stellazon.myshopify.com`; cada push a `main` despliega automáticamente).
+
 ## Arranque rápido
 
 ```bash
