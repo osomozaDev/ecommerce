@@ -13,10 +13,23 @@ export const GET_COLLECTIONS_QUERY = /* GraphQL */ `
 `;
 
 export const GET_COLLECTION_BY_HANDLE_QUERY = /* GraphQL */ `
-  query GetCollectionByHandle($handle: String!, $first: Int!, $after: String) {
+  query GetCollectionByHandle(
+    $handle: String!
+    $first: Int!
+    $after: String
+    $filters: [ProductFilter!]
+    $sortKey: ProductCollectionSortKeys
+    $reverse: Boolean
+  ) {
     collection(handle: $handle) {
       ...CollectionFields
-      products(first: $first, after: $after) {
+      products(
+        first: $first
+        after: $after
+        filters: $filters
+        sortKey: $sortKey
+        reverse: $reverse
+      ) {
         nodes {
           ...ProductFields
         }

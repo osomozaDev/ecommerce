@@ -34,6 +34,7 @@ export interface ComponentVariantMap {
   productCard: string;
   collectionCard: string;
   productGrid: string;
+  filterBar: string;
   productDetail: string;
   cart: string;
   banner: string;

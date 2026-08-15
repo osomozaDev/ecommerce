@@ -1,7 +1,12 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import type { Cart, CartLine } from "../types";
-import type { CartLineInput, CommerceProvider, GetProductsOptions } from "../provider";
+import type { Cart, CartLine, Product } from "../types";
+import type {
+  CartLineInput,
+  CatalogFilters,
+  CommerceProvider,
+  GetProductsOptions,
+} from "../provider";
 import { money } from "../money";
 import { fixtureProducts, findFixtureProduct, findFixtureVariant } from "@/fixtures/products";
 import { fixtureCollections, fixtureCollectionProducts } from "@/fixtures/collections";
@@ -32,6 +37,22 @@ function recompute(cart: Cart): Cart {
   };
 }
 
+function applyFilters(products: Product[], f?: CatalogFilters): Product[] {
+  return products.filter((p) => {
+    if (f?.available && !p.available) return false;
+    if (f?.priceMin !== undefined && p.price.amount < f.priceMin) return false;
+    if (f?.priceMax !== undefined && p.price.amount > f.priceMax) return false;
+    return true;
+  });
+}
+
+function applySort(products: Product[], sort?: GetProductsOptions["sort"]): Product[] {
+  const sorted = [...products];
+  if (sort === "price-asc") sorted.sort((a, b) => a.price.amount - b.price.amount);
+  if (sort === "price-desc") sorted.sort((a, b) => b.price.amount - a.price.amount);
+  return sorted;
+}
+
 function requireCart(cartId: string): Cart {
   const cart = carts.get(cartId);
   if (!cart) throw new Error(`Carrito de fixtures no encontrado: ${cartId}`);
@@ -43,10 +64,7 @@ export const fixturesProvider: CommerceProvider = {
     let products = [...fixtureProducts];
     const q = options?.query?.toLowerCase();
     if (q) products = products.filter((p) => p.title.toLowerCase().includes(q));
-    if (options?.sort === "price-asc")
-      products.sort((a, b) => a.price.amount - b.price.amount);
-    if (options?.sort === "price-desc")
-      products.sort((a, b) => b.price.amount - a.price.amount);
+    products = applySort(applyFilters(products, options), options?.sort);
 
     // Cursor simulado: el offset como string (Shopify usa cursores opacos).
     const offset = options?.after ? parseInt(options.after, 10) || 0 : 0;
@@ -72,9 +90,13 @@ export const fixturesProvider: CommerceProvider = {
     const collection = fixtureCollections.find((c) => c.handle === handle);
     if (!collection) return null;
     const handles = fixtureCollectionProducts[handle] ?? [];
-    const all = handles
-      .map((h) => findFixtureProduct(h))
-      .filter((p) => p !== undefined);
+    const all = applySort(
+      applyFilters(
+        handles.map((h) => findFixtureProduct(h)).filter((p) => p !== undefined),
+        options,
+      ),
+      options?.sort,
+    );
 
     const offset = options?.after ? parseInt(options.after, 10) || 0 : 0;
     const first = options?.first ?? 24;

@@ -11,6 +11,7 @@ import { Header } from "@/components/storefront/header";
 import { Hero } from "@/components/storefront/hero";
 import { ProductCard } from "@/components/storefront/product-card";
 import { CollectionCard } from "@/components/storefront/collection-card";
+import { FilterBar } from "@/components/storefront/filter-bar";
 import { fixtureCollections } from "@/fixtures/collections";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { ProductDetail } from "@/components/storefront/product-detail";
@@ -71,6 +72,7 @@ const secciones = [
   "precio-badge",
   "header",
   "hero",
+  "filter-bar",
   "product-card",
   "collection-card",
   "product-grid",
@@ -165,6 +167,18 @@ export default function DesignSystemPage() {
                 ctaHref="/productos"
                 image={{ src: "/fixtures/producto-1.svg", alt: "Muestra" }}
               />
+            </Muestra>
+          </Section>
+
+          <Section id="filter-bar" title="Filter Bar">
+            <Muestra label="default · con filtros activos">
+              <div className="p-4">
+                <FilterBar
+                  variant="default"
+                  basePath="/dev/design-system"
+                  params={{ orden: "precio-asc", stock: "1" }}
+                />
+              </div>
             </Muestra>
           </Section>
 

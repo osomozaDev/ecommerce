@@ -4,12 +4,26 @@ import { fixturesProvider } from "./fixtures/provider";
 import { shopifyProvider } from "./shopify/provider";
 import { getTenant } from "@/lib/tenant/resolve";
 
-export interface GetProductsOptions {
+export interface CatalogFilters {
+  /** Solo productos disponibles. */
+  available?: boolean;
+  /** Precio mínimo/máximo (moneda de la tienda). */
+  priceMin?: number;
+  priceMax?: number;
+}
+
+export interface GetProductsOptions extends CatalogFilters {
   first?: number;
   /** Cursor de paginación: el endCursor de la página anterior. */
   after?: string;
   /** Búsqueda de texto libre (sintaxis de Shopify en modo shopify). */
   query?: string;
+  sort?: "latest" | "price-asc" | "price-desc";
+}
+
+export interface GetCollectionOptions extends CatalogFilters {
+  first?: number;
+  after?: string;
   sort?: "latest" | "price-asc" | "price-desc";
 }
 
@@ -29,7 +43,7 @@ export interface CommerceProvider {
   getCollections(): Promise<Collection[]>;
   getCollection(
     handle: string,
-    options?: { first?: number; after?: string },
+    options?: GetCollectionOptions,
   ): Promise<{
     collection: Collection;
     products: Product[];

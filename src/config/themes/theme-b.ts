@@ -27,6 +27,7 @@ export const themeB: ThemeConfig = {
     productCard: "minimal",
     collectionCard: "default",
     productGrid: "default",
+    filterBar: "default",
     productDetail: "default",
     cart: "default",
     banner: "default",

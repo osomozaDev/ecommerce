@@ -33,6 +33,50 @@ const SORT_MAP: Record<
   "price-desc": { sortKey: "PRICE", reverse: true },
 };
 
+// Las colecciones usan otro enum de ordenación en la Storefront API.
+const COLLECTION_SORT_MAP: Record<
+  NonNullable<GetProductsOptions["sort"]>,
+  { sortKey: string; reverse: boolean }
+> = {
+  latest: { sortKey: "CREATED", reverse: true },
+  "price-asc": { sortKey: "PRICE", reverse: false },
+  "price-desc": { sortKey: "PRICE", reverse: true },
+};
+
+/** Sintaxis de búsqueda de products(query:) para los filtros de catálogo. */
+function buildProductQuery(options?: {
+  query?: string;
+  available?: boolean;
+  priceMin?: number;
+  priceMax?: number;
+}): string | undefined {
+  const parts: string[] = [];
+  if (options?.query) parts.push(options.query);
+  if (options?.available) parts.push("available_for_sale:true");
+  if (options?.priceMin !== undefined) parts.push(`variants.price:>=${options.priceMin}`);
+  if (options?.priceMax !== undefined) parts.push(`variants.price:<=${options.priceMax}`);
+  return parts.length > 0 ? parts.join(" AND ") : undefined;
+}
+
+/** Input ProductFilter de collection.products(filters:). */
+function buildCollectionFilters(options?: {
+  available?: boolean;
+  priceMin?: number;
+  priceMax?: number;
+}): unknown[] | undefined {
+  const filters: unknown[] = [];
+  if (options?.available) filters.push({ available: true });
+  if (options?.priceMin !== undefined || options?.priceMax !== undefined) {
+    filters.push({
+      price: {
+        ...(options.priceMin !== undefined ? { min: options.priceMin } : {}),
+        ...(options.priceMax !== undefined ? { max: options.priceMax } : {}),
+      },
+    });
+  }
+  return filters.length > 0 ? filters : undefined;
+}
+
 interface PageInfo {
   hasNextPage: boolean;
   endCursor: string | null;
@@ -68,7 +112,7 @@ export const shopifyProvider: CommerceProvider = {
       variables: {
         first: options?.first ?? 24,
         after: options?.after,
-        query: options?.query,
+        query: buildProductQuery(options),
         sortKey: sort?.sortKey,
         reverse: sort?.reverse,
       },
@@ -114,7 +158,14 @@ export const shopifyProvider: CommerceProvider = {
         | null;
     }>({
       query: GET_COLLECTION_BY_HANDLE_QUERY,
-      variables: { handle, first: options?.first ?? 24, after: options?.after },
+      variables: {
+        handle,
+        first: options?.first ?? 24,
+        after: options?.after,
+        filters: buildCollectionFilters(options),
+        sortKey: options?.sort ? COLLECTION_SORT_MAP[options.sort].sortKey : undefined,
+        reverse: options?.sort ? COLLECTION_SORT_MAP[options.sort].reverse : undefined,
+      },
       tags: [
         CACHE_TAGS.collections(tenant.id),
         CACHE_TAGS.collection(tenant.id, handle),

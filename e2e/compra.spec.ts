@@ -66,6 +66,22 @@ test("catálogo y colecciones renderizan desde el provider", async ({ page }) =>
   await expect(page.getByRole("main").getByRole("link", { name: /Lámpara Arco/ })).toBeVisible();
 });
 
+test("los filtros de catálogo acotan los resultados", async ({ page }) => {
+  await page.goto("/productos");
+  // 8 productos en fixtures; el difusor está agotado
+  await expect(page.getByRole("main").getByRole("link", { name: /Difusor de cedro/ })).toBeVisible();
+
+  await page.getByRole("main").getByRole("link", { name: "En stock" }).click();
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Difusor de cedro/ }),
+  ).toHaveCount(0);
+
+  await page.getByRole("main").getByRole("link", { name: "Más de 100" }).click();
+  // Solo lámpara (149) y espejo Ø60 no cuentan (precio mínimo 79): queda la lámpara
+  await expect(page.getByRole("main").getByRole("link", { name: /Lámpara Arco/ })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /Vela aromática/ })).toHaveCount(0);
+});
+
 test("el laboratorio de diseño funciona con fixtures", async ({ page }) => {
   await page.goto("/dev/design-system");
   await expect(page.getByRole("heading", { level: 1, name: "Design System" })).toBeVisible();
