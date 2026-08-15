@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { CartIndicator } from "@/components/storefront/cart/CartIndicator";
+import { CartWidget } from "@/components/storefront/cart/CartDrawer";
 import type { HeaderProps } from "./types";
 
 export function DefaultHeader({ shopName, nav }: HeaderProps) {
@@ -21,7 +21,7 @@ export function DefaultHeader({ shopName, nav }: HeaderProps) {
             </Link>
           ))}
         </nav>
-        <CartIndicator />
+        <CartWidget />
       </Container>
     </header>
   );

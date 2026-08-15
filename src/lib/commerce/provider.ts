@@ -28,8 +28,13 @@ export interface CommerceProvider {
   getCollections(): Promise<Collection[]>;
   getCollection(
     handle: string,
-    options?: { first?: number },
-  ): Promise<{ collection: Collection; products: Product[] } | null>;
+    options?: { first?: number; after?: string },
+  ): Promise<{
+    collection: Collection;
+    products: Product[];
+    hasNextPage: boolean;
+    endCursor: string | null;
+  } | null>;
 
   createCart(): Promise<Cart>;
   getCart(cartId: string): Promise<Cart | null>;

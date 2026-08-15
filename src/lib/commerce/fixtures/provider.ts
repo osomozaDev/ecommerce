@@ -72,11 +72,20 @@ export const fixturesProvider: CommerceProvider = {
     const collection = fixtureCollections.find((c) => c.handle === handle);
     if (!collection) return null;
     const handles = fixtureCollectionProducts[handle] ?? [];
-    const products = handles
+    const all = handles
       .map((h) => findFixtureProduct(h))
-      .filter((p) => p !== undefined)
-      .slice(0, options?.first ?? 24);
-    return { collection, products };
+      .filter((p) => p !== undefined);
+
+    const offset = options?.after ? parseInt(options.after, 10) || 0 : 0;
+    const first = options?.first ?? 24;
+    const page = all.slice(offset, offset + first);
+    const end = offset + page.length;
+    return {
+      collection,
+      products: page,
+      hasNextPage: end < all.length,
+      endCursor: page.length > 0 ? String(end) : null,
+    };
   },
 
   async createCart() {

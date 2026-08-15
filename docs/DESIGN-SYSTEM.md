@@ -158,3 +158,9 @@ tipo en `src/blocks/types.ts` → componente `XBlock.tsx` → una línea en
 
 `src/components/ui/`: `Container`, `Button`/`LinkButton` (primary, secondary,
 ghost), `Price` (con precio tachado), `Badge`. Amplíalas ahí.
+
+Componentes de storefront con variantes: `header`, `hero`, `product-card`,
+`collection-card`, `product-grid`, `product-detail`, `cart` (vista completa),
+`banner`, `footer`. Además, `cart/CartDrawer.tsx` es el botón + panel lateral
+del carrito que usa el header: es tuyo para restilizar (usa `useCart()`, no
+toca Shopify).

@@ -22,6 +22,20 @@ describe("fixturesProvider · paginación", () => {
     expect(idsSegunda.some((id) => idsPrimera.includes(id))).toBe(false);
   });
 
+  it("pagina los productos de una colección con cursor", async () => {
+    // iluminacion tiene 3 productos en fixtures
+    const primera = await fixturesProvider.getCollection("iluminacion", { first: 2 });
+    expect(primera?.products).toHaveLength(2);
+    expect(primera?.hasNextPage).toBe(true);
+
+    const segunda = await fixturesProvider.getCollection("iluminacion", {
+      first: 2,
+      after: primera!.endCursor!,
+    });
+    expect(segunda?.products).toHaveLength(1);
+    expect(segunda?.hasNextPage).toBe(false);
+  });
+
   it("señala el final del catálogo", async () => {
     const page = await fixturesProvider.getProducts({
       first: fixtureProducts.length + 10,

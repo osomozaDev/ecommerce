@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Cart } from "@/lib/commerce/types";
+import { money } from "@/lib/commerce/money";
 import {
   addItemAction,
   removeItemAction,
@@ -40,9 +41,18 @@ type OptimisticAction =
 
 function optimisticReducer(cart: Cart | null, action: OptimisticAction): Cart | null {
   if (!cart) {
-    // Aún no hay carrito: el "add" optimista no puede inventar la línea
-    // (no conoce el producto aquí); isPending cubre ese primer añadido.
-    return cart;
+    // Primer añadido sin carrito previo: se levanta un carrito optimista
+    // mínimo para que el contador del header responda al instante; el
+    // carrito real del servidor lo sustituye al confirmar.
+    if (action.type !== "add") return cart;
+    return {
+      id: "__optimista__",
+      lines: [],
+      totalQuantity: action.quantity,
+      subtotal: money(0),
+      total: money(0),
+      checkoutUrl: "#",
+    };
   }
   switch (action.type) {
     case "add":

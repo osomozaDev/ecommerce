@@ -13,12 +13,16 @@ export const GET_COLLECTIONS_QUERY = /* GraphQL */ `
 `;
 
 export const GET_COLLECTION_BY_HANDLE_QUERY = /* GraphQL */ `
-  query GetCollectionByHandle($handle: String!, $first: Int!) {
+  query GetCollectionByHandle($handle: String!, $first: Int!, $after: String) {
     collection(handle: $handle) {
       ...CollectionFields
-      products(first: $first) {
+      products(first: $first, after: $after) {
         nodes {
           ...ProductFields
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
         }
       }
     }

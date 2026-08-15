@@ -94,16 +94,25 @@ export const shopifyProvider: CommerceProvider = {
 
   async getCollection(handle, options) {
     const data = await shopifyFetch<{
-      collection: (ShopifyCollection & { products: { nodes: ShopifyProduct[] } }) | null;
+      collection:
+        | (ShopifyCollection & {
+            products: {
+              nodes: ShopifyProduct[];
+              pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            };
+          })
+        | null;
     }>({
       query: GET_COLLECTION_BY_HANDLE_QUERY,
-      variables: { handle, first: options?.first ?? 24 },
+      variables: { handle, first: options?.first ?? 24, after: options?.after },
       tags: [CACHE_TAGS.collections, CACHE_TAGS.collection(handle)],
     });
     if (!data.collection) return null;
     return {
       collection: mapCollection(data.collection),
       products: data.collection.products.nodes.map(mapProduct),
+      hasNextPage: data.collection.products.pageInfo.hasNextPage,
+      endCursor: data.collection.products.pageInfo.endCursor,
     };
   },
 

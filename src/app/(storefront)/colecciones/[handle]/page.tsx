@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
+import { LinkButton } from "@/components/ui/Button";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { getCommerce } from "@/lib/commerce/provider";
 import { getTenant } from "@/lib/tenant/resolve";
@@ -9,7 +10,11 @@ import { breadcrumbJsonLd, collectionBreadcrumb } from "@/lib/seo/jsonld";
 
 interface Props {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<{ mostrar?: string }>;
 }
+
+const PAGE_SIZE = 12;
+const MAX_SIZE = 120;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
@@ -28,11 +33,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ColeccionPage({ params }: Props) {
-  const { handle } = await params;
-  const result = await getCommerce().getCollection(handle, { first: 24 });
+export default async function ColeccionPage({ params, searchParams }: Props) {
+  const [{ handle }, { mostrar }] = await Promise.all([params, searchParams]);
+  const requested = parseInt(mostrar ?? "", 10);
+  const first = Number.isFinite(requested)
+    ? Math.min(Math.max(requested, PAGE_SIZE), MAX_SIZE)
+    : PAGE_SIZE;
+
+  const result = await getCommerce().getCollection(handle, { first });
   if (!result) notFound();
-  const { collection, products } = result;
+  const { collection, products, hasNextPage } = result;
 
   return (
     <Container className="flex flex-col gap-8 py-10">
@@ -46,6 +56,16 @@ export default async function ColeccionPage({ params }: Props) {
         )}
       </div>
       <ProductGrid products={products} />
+      {hasNextPage && (
+        <div className="flex justify-center">
+          <LinkButton
+            href={`${collection.href}?mostrar=${first + PAGE_SIZE}`}
+            variant="secondary"
+          >
+            Mostrar más
+          </LinkButton>
+        </div>
+      )}
     </Container>
   );
 }
