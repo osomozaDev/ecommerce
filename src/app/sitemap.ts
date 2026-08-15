@@ -3,7 +3,7 @@ import { getTenant } from "@/lib/tenant/resolve";
 import { getCommerce } from "@/lib/commerce/provider";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const tenant = getTenant();
+  const tenant = await getTenant();
   const commerce = getCommerce();
   const [{ products }, collections] = await Promise.all([
     commerce.getProducts({ first: 100 }),

@@ -62,7 +62,7 @@ describe("money", () => {
 
 describe("mapProduct", () => {
   it("resuelve href y precios ya listos para la UI", () => {
-    const p = mapProduct(product());
+    const p = mapProduct(product(), "es-ES");
     expect(p.href).toBe("/productos/jarron-luna");
     expect(p.price.amount).toBe(32);
     expect(fmt(p.price.formatted)).toBe("32,00 €");
@@ -71,7 +71,7 @@ describe("mapProduct", () => {
   });
 
   it("usa el título como alt cuando la imagen no trae altText", () => {
-    const p = mapProduct(product());
+    const p = mapProduct(product(), "es-ES");
     expect(p.images[0].alt).toBe("Jarrón Luna");
   });
 
@@ -82,6 +82,7 @@ describe("mapProduct", () => {
           minVariantPrice: { amount: "42.0", currencyCode: "EUR" },
         },
       }),
+      "es-ES",
     );
     expect(p.compareAtPrice?.amount).toBe(42);
     expect(p.badge).toBe("Oferta");
@@ -94,18 +95,19 @@ describe("mapProduct", () => {
           minVariantPrice: { amount: "32.0", currencyCode: "EUR" },
         },
       }),
+      "es-ES",
     );
     expect(p.compareAtPrice).toBeUndefined();
     expect(p.badge).toBeUndefined();
   });
 
   it("deriva badge Nuevo desde el tag (sin distinguir mayúsculas)", () => {
-    const p = mapProduct(product({ tags: ["Destacado", "NUEVO"] }));
+    const p = mapProduct(product({ tags: ["Destacado", "NUEVO"] }), "es-ES");
     expect(p.badge).toBe("Nuevo");
   });
 
   it("mapea opciones desde optionValues", () => {
-    const p = mapProduct(product());
+    const p = mapProduct(product(), "es-ES");
     expect(p.options).toEqual([{ name: "Talla", values: ["S", "M"] }]);
   });
 
@@ -126,6 +128,7 @@ describe("mapProduct", () => {
           ],
         },
       }),
+      "es-ES",
     );
     expect(p.variants).toHaveLength(2);
     expect(p.variants[1].available).toBe(false);
@@ -134,7 +137,7 @@ describe("mapProduct", () => {
   });
 
   it("rellena seo con fallbacks del producto", () => {
-    const p = mapProduct(product());
+    const p = mapProduct(product(), "es-ES");
     expect(p.seo.title).toBe("Jarrón Luna");
     expect(p.seo.description).toBe("Cerámica esmaltada a mano.");
   });
@@ -198,7 +201,7 @@ describe("mapCart", () => {
   };
 
   it("mapea líneas, totales y checkoutUrl", () => {
-    const c = mapCart(cart);
+    const c = mapCart(cart, "es-ES");
     expect(c.totalQuantity).toBe(3);
     expect(c.subtotal.amount).toBe(109);
     expect(c.checkoutUrl).toBe("https://stellazon.myshopify.com/cart/c/abc");
@@ -208,7 +211,7 @@ describe("mapCart", () => {
   });
 
   it('oculta el variantTitle "Default Title" de productos sin opciones', () => {
-    const c = mapCart(cart);
+    const c = mapCart(cart, "es-ES");
     expect(c.lines[0].variantTitle).toBe("S");
     expect(c.lines[1].variantTitle).toBeUndefined();
     expect(c.lines[1].image).toBeUndefined();

@@ -9,7 +9,6 @@ import type {
   ProductVariant,
 } from "../types";
 import { money } from "../money";
-import { getTenant } from "@/lib/tenant/resolve";
 import type {
   ShopifyCart,
   ShopifyCartLine,
@@ -26,8 +25,8 @@ import type {
  * badge, disponibilidad. Ningún tipo Shopify sale de esta capa.
  */
 
-function mapMoney(m: ShopifyMoney): Money {
-  return money(parseFloat(m.amount), m.currencyCode, getTenant().locale);
+function mapMoney(m: ShopifyMoney, locale: string): Money {
+  return money(parseFloat(m.amount), m.currencyCode, locale);
 }
 
 function mapImage(img: ShopifyImage, fallbackAlt: string): Image {
@@ -39,17 +38,21 @@ function mapImage(img: ShopifyImage, fallbackAlt: string): Image {
   };
 }
 
-function mapVariant(v: ShopifyVariant, productTitle: string): ProductVariant {
+function mapVariant(
+  v: ShopifyVariant,
+  productTitle: string,
+  locale: string,
+): ProductVariant {
   const compareAt =
     v.compareAtPrice && parseFloat(v.compareAtPrice.amount) > parseFloat(v.price.amount)
-      ? mapMoney(v.compareAtPrice)
+      ? mapMoney(v.compareAtPrice, locale)
       : undefined;
   return {
     id: v.id,
     title: v.title,
     available: v.availableForSale,
     selectedOptions: v.selectedOptions,
-    price: mapMoney(v.price),
+    price: mapMoney(v.price, locale),
     compareAtPrice: compareAt,
     image: v.image ? mapImage(v.image, productTitle) : undefined,
   };
@@ -61,12 +64,12 @@ function deriveBadge(p: ShopifyProduct, compareAtPrice?: Money): string | undefi
   return undefined;
 }
 
-export function mapProduct(p: ShopifyProduct): Product {
-  const price = mapMoney(p.priceRange.minVariantPrice);
+export function mapProduct(p: ShopifyProduct, locale: string): Product {
+  const price = mapMoney(p.priceRange.minVariantPrice, locale);
   const compareAtRaw = p.compareAtPriceRange?.minVariantPrice;
   const compareAtPrice =
     compareAtRaw && parseFloat(compareAtRaw.amount) > price.amount
-      ? mapMoney(compareAtRaw)
+      ? mapMoney(compareAtRaw, locale)
       : undefined;
 
   return {
@@ -84,7 +87,7 @@ export function mapProduct(p: ShopifyProduct): Product {
       name: o.name,
       values: o.optionValues.map((v) => v.name),
     })),
-    variants: p.variants.nodes.map((v) => mapVariant(v, p.title)),
+    variants: p.variants.nodes.map((v) => mapVariant(v, p.title, locale)),
     seo: {
       title: p.seo.title ?? p.title,
       description: p.seo.description ?? p.description.slice(0, 155),
@@ -107,7 +110,7 @@ export function mapCollection(c: ShopifyCollection): Collection {
   };
 }
 
-function mapCartLine(l: ShopifyCartLine): CartLine {
+function mapCartLine(l: ShopifyCartLine, locale: string): CartLine {
   const m = l.merchandise;
   return {
     id: l.id,
@@ -118,18 +121,18 @@ function mapCartLine(l: ShopifyCartLine): CartLine {
     href: `/productos/${m.product.handle}`,
     image: m.image ? mapImage(m.image, m.product.title) : undefined,
     quantity: l.quantity,
-    unitPrice: mapMoney(m.price),
-    lineTotal: mapMoney(l.cost.totalAmount),
+    unitPrice: mapMoney(m.price, locale),
+    lineTotal: mapMoney(l.cost.totalAmount, locale),
   };
 }
 
-export function mapCart(c: ShopifyCart): Cart {
+export function mapCart(c: ShopifyCart, locale: string): Cart {
   return {
     id: c.id,
-    lines: c.lines.nodes.map(mapCartLine),
+    lines: c.lines.nodes.map((l) => mapCartLine(l, locale)),
     totalQuantity: c.totalQuantity,
-    subtotal: mapMoney(c.cost.subtotalAmount),
-    total: mapMoney(c.cost.totalAmount),
+    subtotal: mapMoney(c.cost.subtotalAmount, locale),
+    total: mapMoney(c.cost.totalAmount, locale),
     checkoutUrl: c.checkoutUrl,
   };
 }

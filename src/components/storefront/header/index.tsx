@@ -7,7 +7,7 @@ import type { HeaderProps } from "./types";
  * la configurada en el theme del tenant. Mismo patrón en todos los
  * componentes del design system.
  */
-export function Header({ variant, ...props }: HeaderProps & { variant?: string }) {
-  const Variant = headerVariants[variant ?? variantOf("header")] ?? headerVariants.default;
+export async function Header({ variant, ...props }: HeaderProps & { variant?: string }) {
+  const Variant = headerVariants[variant ?? (await variantOf("header"))] ?? headerVariants.default;
   return <Variant {...props} />;
 }

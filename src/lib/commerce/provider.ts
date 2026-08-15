@@ -2,6 +2,7 @@ import "server-only";
 import type { Cart, Collection, Product, ProductList } from "./types";
 import { fixturesProvider } from "./fixtures/provider";
 import { shopifyProvider } from "./shopify/provider";
+import { getTenant } from "@/lib/tenant/resolve";
 
 export interface GetProductsOptions {
   first?: number;
@@ -43,11 +44,32 @@ export interface CommerceProvider {
   removeCartLines(cartId: string, lineIds: string[]): Promise<Cart>;
 }
 
-export function getCommerce(): CommerceProvider {
-  const source = process.env.COMMERCE_DATA_SOURCE ?? "fixtures";
+async function pickProvider(): Promise<CommerceProvider> {
+  const tenant = await getTenant();
+  const source =
+    tenant.dataSource ?? process.env.COMMERCE_DATA_SOURCE ?? "fixtures";
   if (source === "shopify") return shopifyProvider;
   if (source === "fixtures") return fixturesProvider;
   throw new Error(
-    `COMMERCE_DATA_SOURCE inválido: "${source}" (usa "shopify" o "fixtures")`,
+    `Data source inválido: "${source}" (usa "shopify" o "fixtures")`,
   );
+}
+
+/**
+ * Fachada: el provider real se elige POR REQUEST según el tenant
+ * (tenant.dataSource, con fallback al env COMMERCE_DATA_SOURCE). Así una
+ * tienda demo en fixtures y una real en Shopify conviven en el mismo deploy.
+ */
+export function getCommerce(): CommerceProvider {
+  return {
+    getProducts: async (o) => (await pickProvider()).getProducts(o),
+    getProduct: async (h) => (await pickProvider()).getProduct(h),
+    getCollections: async () => (await pickProvider()).getCollections(),
+    getCollection: async (h, o) => (await pickProvider()).getCollection(h, o),
+    createCart: async () => (await pickProvider()).createCart(),
+    getCart: async (id) => (await pickProvider()).getCart(id),
+    addCartLines: async (id, l) => (await pickProvider()).addCartLines(id, l),
+    updateCartLine: async (id, l, q) => (await pickProvider()).updateCartLine(id, l, q),
+    removeCartLines: async (id, l) => (await pickProvider()).removeCartLines(id, l),
+  };
 }

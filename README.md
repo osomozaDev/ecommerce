@@ -30,6 +30,16 @@ tienda (el `storeDomain` va en `src/config/tenants/`).
 - [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md) — manual de UI: variantes,
   tokens, fixtures, qué tocar y qué no (lado diseño).
 
+## Alta de tienda nueva
+
+```bash
+node scripts/nueva-tienda.mjs --id=cliente-x --nombre="Cliente X" \
+  --store=cliente-x.myshopify.com --dominio=https://cliente-x.com
+```
+
+Multi-tenant por dominio: N tiendas en un deploy, resueltas por `Host`.
+En local cada tienda responde en `http://<id>.localhost:3000`.
+
 ## Mapa rápido
 
 ```text

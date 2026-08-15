@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getTenant } from "@/lib/tenant/resolve";
 
-export default function robots(): MetadataRoute.Robots {
-  const tenant = getTenant();
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const tenant = await getTenant();
   return {
     rules: [
       {

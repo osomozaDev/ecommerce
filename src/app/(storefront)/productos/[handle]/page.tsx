@@ -30,7 +30,7 @@ export default async function ProductoPage({ params }: Props) {
   const { handle } = await params;
   const product = await getCommerce().getProduct(handle);
   if (!product) notFound();
-  const tenant = getTenant();
+  const tenant = await getTenant();
   return (
     <>
       <JsonLd data={productJsonLd(product, tenant)} />

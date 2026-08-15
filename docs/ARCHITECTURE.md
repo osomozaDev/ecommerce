@@ -71,26 +71,43 @@ UI (Client Component)
   mutación ni el token.
 - **No hay checkout propio**: el pago ocurre siempre en Shopify.
 
-## Tenant
+## Tenant (multi-tenant por dominio — fase 2)
 
-- Config pública en `src/config/tenants/<id>.ts` (`TenantConfig`): branding,
-  theme, bloques de homepage, `shopify.storeDomain`.
-- **Secretos solo en env** (`SHOPIFY_STOREFRONT_TOKEN`), nunca en la config ni
-  con prefijo `NEXT_PUBLIC_`.
-- Fase 1: un tenant por despliegue, seleccionado con `TENANT_ID`.
-  `getTenant()` (src/lib/tenant/resolve.ts) es el único punto de resolución:
-  evolucionar a resolución por dominio (middleware) no toca la UI.
+- Cada tienda es un **JSON** en `src/config/tenants/<id>.json` (branding,
+  theme por nombre, bloques de homepage, dominios, `shopify.storeDomain`,
+  `dataSource` opcional). Los JSON se validan e hidratan en
+  `src/lib/tenant/registry.ts` (referencia de theme → `config/themes`,
+  bloques desconocidos descartados). Este formato es el que en el futuro
+  generará la IA/CMS.
+- **Resolución por request** (`getTenant()`, async): primero por `Host`
+  (dominio canónico o alias en `domains`, p. ej. `tienda-b.localhost`);
+  fallback a `TENANT_ID` para hosts no registrados y prerender estático.
+  **N dominios → 1 deploy.**
+- **Secretos por tenant** vía convención de env con fallback:
+  `SHOPIFY_STOREFRONT_TOKEN__TIENDA_B` > `SHOPIFY_STOREFRONT_TOKEN`
+  (ídem `SHOPIFY_WEBHOOK_SECRET__*`). Nunca en los JSON ni con `NEXT_PUBLIC_`.
+- **Data source por tenant**: `dataSource: "fixtures" | "shopify"` en el JSON
+  (fallback al env `COMMERCE_DATA_SOURCE`). Una tienda demo en fixtures y una
+  real en Shopify conviven en el mismo deploy; las tiendas nuevas nacen en
+  fixtures hasta tener token.
+- **Caché aislada por tenant**: los tags llevan namespace (`t:<id>:products`),
+  y el webhook resuelve el tenant por `X-Shopify-Shop-Domain`, verifica con
+  SU secreto e invalida solo SUS tags.
 
-### Conectar una tienda nueva (test arquitectónico)
+### Alta de tienda nueva (provisioning)
 
-1. `src/config/tenants/mi-tienda.ts` (copiar `tienda-b.ts`).
-2. `src/config/themes/mi-theme.ts` si quiere identidad propia.
-3. Registrarla en `src/lib/tenant/resolve.ts` (1 línea).
-4. Env del despliegue: `TENANT_ID=mi-tienda`, `COMMERCE_DATA_SOURCE=shopify`,
-   `SHOPIFY_STOREFRONT_TOKEN=…`.
+```bash
+node scripts/nueva-tienda.mjs \
+  --id=cliente-x --nombre="Cliente X" \
+  --store=cliente-x.myshopify.com --dominio=https://cliente-x.com \
+  [--theme=theme-a] [--admin-token=shpat_…]   # ← registra webhooks él solo
+```
 
-Cero cambios en `components/`, `lib/commerce/`, `app/`. Si algún cambio de
-tienda exige tocar esas carpetas, la arquitectura se ha roto: revisarla.
+El CLI crea el JSON, lo registra en el índice, opcionalmente da de alta los
+webhooks vía Admin API, e imprime los pasos restantes (envs y dominio en
+Vercel). La tienda nace en fixtures y funciona al instante en
+`http://<id>.localhost:3000`. Cero cambios en `components/`, `lib/` o `app/`;
+si algún alta exige tocarlos, la arquitectura se ha roto: revisarla.
 
 ## Theme Engine
 

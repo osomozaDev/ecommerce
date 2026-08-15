@@ -5,8 +5,8 @@ import { getTheme } from "@/theme";
  * globals.css los mapea a utilidades Tailwind (bg-brand, rounded-base, …),
  * de modo que cambiar de theme cambia toda la tienda sin tocar CSS.
  */
-export function ThemeStyle() {
-  const { tokens } = getTheme();
+export async function ThemeStyle() {
+  const { tokens } = await getTheme();
   const css = `:root{
 --brand:${tokens.colors.brand};
 --brand-contrast:${tokens.colors.brandContrast};

@@ -5,7 +5,7 @@ import { getTenant } from "@/lib/tenant/resolve";
 import { ThemeStyle } from "@/theme/ThemeStyle";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const tenant = getTenant();
+  const tenant = await getTenant();
   const { name, tagline } = tenant.branding;
   return {
     metadataBase: new URL(tenant.domain),

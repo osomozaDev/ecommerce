@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { breadcrumbJsonLd, productBreadcrumb, productJsonLd } from "./jsonld";
 import { fixtureProducts, findFixtureProduct } from "@/fixtures/products";
-import { defaultTenant } from "@/config/tenants/default";
+import { hydrateTenant } from "@/lib/tenant/registry";
+import defaultTenantData from "@/config/tenants/default.json";
 
-const tenant = defaultTenant;
+const tenant = hydrateTenant(defaultTenantData);
 
 describe("productJsonLd", () => {
   it("genera AggregateOffer con rango de precios para productos con variantes", () => {

@@ -1,25 +1,41 @@
 import "server-only";
+import { headers } from "next/headers";
 import type { TenantConfig } from "./types";
-import { defaultTenant } from "@/config/tenants/default";
-import { tiendaB } from "@/config/tenants/tienda-b";
-
-const tenants: Record<string, TenantConfig> = {
-  [defaultTenant.id]: defaultTenant,
-  [tiendaB.id]: tiendaB,
-};
+import { resolveTenantByHost, tenantRegistry } from "./registry";
 
 /**
- * Resolución de tenant. Fase 1: un tenant por despliegue, seleccionado con
- * TENANT_ID. La firma y el registro ya soportan la evolución futura:
- * resolver por dominio de la request (middleware/headers) sin tocar la UI.
+ * Resolución de tenant por request:
+ *   1. Por Host de la petición (multi-tenant real: N dominios → 1 deploy).
+ *   2. Fallback a TENANT_ID (build estático, despliegues de un solo tenant,
+ *      tests y contextos sin request).
  */
-export function getTenant(): TenantConfig {
+export async function getTenant(): Promise<TenantConfig> {
+  const registry = tenantRegistry();
+
+  let host: string | null = null;
+  try {
+    host = (await headers()).get("host");
+  } catch {
+    // Fuera de una request (p. ej. prerender estático): se usa el fallback.
+  }
+
+  const byHost = resolveTenantByHost(host, registry.values());
+  if (byHost) return byHost;
+
   const id = process.env.TENANT_ID ?? "default";
-  const tenant = tenants[id];
+  const tenant = registry.get(id);
   if (!tenant) {
     throw new Error(
-      `Tenant desconocido: "${id}". Registrados: ${Object.keys(tenants).join(", ")}`,
+      `Tenant desconocido: "${id}". Registrados: ${[...registry.keys()].join(", ")}`,
     );
   }
   return tenant;
+}
+
+/** Busca un tenant por el dominio de su tienda Shopify (webhooks). */
+export function getTenantByStoreDomain(storeDomain: string): TenantConfig | null {
+  for (const tenant of tenantRegistry().values()) {
+    if (tenant.shopify.storeDomain === storeDomain) return tenant;
+  }
+  return null;
 }

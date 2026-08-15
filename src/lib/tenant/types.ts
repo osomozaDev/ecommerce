@@ -14,8 +14,16 @@ export interface TenantConfig {
   slug: string;
   /** Dominio público canónico, con protocolo. Base de SEO/canonical/sitemap. */
   domain: string;
+  /** Hostnames adicionales que resuelven a este tenant (aliases, *.localhost). */
+  domains?: string[];
   /** Locale para formateo de precios y lang. */
   locale: string;
+  /**
+   * Fuente de datos de ESTE tenant. Si no se define, manda el env
+   * COMMERCE_DATA_SOURCE. Permite tiendas demo (fixtures) conviviendo
+   * con tiendas reales (shopify) en el mismo deploy.
+   */
+  dataSource?: "shopify" | "fixtures";
   branding: {
     name: string;
     tagline?: string;

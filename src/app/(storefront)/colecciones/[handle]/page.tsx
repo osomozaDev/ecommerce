@@ -46,7 +46,7 @@ export default async function ColeccionPage({ params, searchParams }: Props) {
 
   return (
     <Container className="flex flex-col gap-8 py-10">
-      <JsonLd data={breadcrumbJsonLd(collectionBreadcrumb(collection), getTenant())} />
+      <JsonLd data={breadcrumbJsonLd(collectionBreadcrumb(collection), await getTenant())} />
       <div className="flex max-w-2xl flex-col gap-3">
         <h1 className="font-heading text-3xl font-semibold tracking-tight">
           {collection.title}

@@ -14,7 +14,7 @@ import { organizationJsonLd } from "@/lib/seo/jsonld";
  * useCart() sin saber nada de Shopify.
  */
 export default async function StorefrontLayout({ children }: { children: ReactNode }) {
-  const tenant = getTenant();
+  const tenant = await getTenant();
   const [initialCart, collections] = await Promise.all([
     getCartAction(),
     getCommerce().getCollections(),
