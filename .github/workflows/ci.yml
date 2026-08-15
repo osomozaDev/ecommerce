@@ -33,5 +33,8 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Tests (mappers / contrato)
+        run: pnpm test
+
       - name: Build (incluye typecheck)
         run: pnpm build
