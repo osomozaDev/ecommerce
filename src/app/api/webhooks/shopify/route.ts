@@ -28,7 +28,7 @@ function verifyHmac(rawBody: string, hmacHeader: string, secret: string): boolea
 
 export async function POST(request: Request) {
   const shopDomain = request.headers.get("x-shopify-shop-domain") ?? "";
-  const tenant = getTenantByStoreDomain(shopDomain);
+  const tenant = await getTenantByStoreDomain(shopDomain);
   if (!tenant) {
     // Tienda no registrada: 200 para no acumular reintentos de Shopify.
     return new Response(`Tienda desconocida: ${shopDomain}`, { status: 200 });

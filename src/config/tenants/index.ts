@@ -5,5 +5,4 @@
  */
 import defaultTenant from "./default.json";
 import tiendaB from "./tienda-b.json";
-
 export const tenantData: unknown[] = [defaultTenant, tiendaB];

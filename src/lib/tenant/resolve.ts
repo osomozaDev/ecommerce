@@ -10,7 +10,7 @@ import { resolveTenantByHost, tenantRegistry } from "./registry";
  *      tests y contextos sin request).
  */
 export async function getTenant(): Promise<TenantConfig> {
-  const registry = tenantRegistry();
+  const registry = await tenantRegistry();
 
   let host: string | null = null;
   try {
@@ -33,8 +33,10 @@ export async function getTenant(): Promise<TenantConfig> {
 }
 
 /** Busca un tenant por el dominio de su tienda Shopify (webhooks). */
-export function getTenantByStoreDomain(storeDomain: string): TenantConfig | null {
-  for (const tenant of tenantRegistry().values()) {
+export async function getTenantByStoreDomain(
+  storeDomain: string,
+): Promise<TenantConfig | null> {
+  for (const tenant of (await tenantRegistry()).values()) {
     if (tenant.shopify.storeDomain === storeDomain) return tenant;
   }
   return null;

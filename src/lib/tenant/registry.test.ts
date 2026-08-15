@@ -26,6 +26,23 @@ describe("hydrateTenant", () => {
     ).toThrow(/theme "no-existe" no existe/);
   });
 
+  it("aplica themeOverrides sobre el theme base sin perder tokens", () => {
+    const t = hydrateTenant({
+      ...defaultTenantData,
+      themeOverrides: {
+        tokens: { radius: "2rem", colors: { brand: "#123456" } },
+        components: { productCard: "minimal" },
+      },
+    });
+    expect(t.theme.tokens.radius).toBe("2rem");
+    expect(t.theme.tokens.colors.brand).toBe("#123456");
+    // lo no sobrescrito se conserva del theme base
+    expect(t.theme.tokens.colors.bg).toBeTruthy();
+    expect(t.theme.tokens.containerWidth).toBeTruthy();
+    expect(t.theme.components.productCard).toBe("minimal");
+    expect(t.theme.components.header).toBe("default");
+  });
+
   it("descarta bloques de tipo desconocido sin romper", () => {
     const t = hydrateTenant({
       ...defaultTenantData,

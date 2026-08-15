@@ -1,15 +1,22 @@
 import type { TenantConfig } from "./types";
+import type { ComponentVariantMap, ThemeConfig, ThemeTokens } from "@/theme/types";
 import type { Block } from "@/blocks/types";
 import { tenantData } from "@/config/tenants";
 import { themes } from "@/config/themes";
 
 /**
  * Hidrata y valida los JSON de tenant. Los JSON son datos (generables por
- * IA/CMS en el futuro); aquí se convierten en TenantConfig tipada:
+ * IA/CMS); aquí se convierten en TenantConfig tipada:
  * - se valida lo imprescindible con errores claros;
  * - la referencia de theme ("theme-a") se resuelve contra config/themes;
  * - los bloques de tipo desconocido se descartan (una config más nueva
  *   no debe romper un storefront desplegado).
+ *
+ * FUENTES: los JSON del repo son la base. Si TENANTS_URL está definida,
+ * se cargan además tenants remotos (mismo formato, un array JSON) que
+ * PISAN a los del repo por id — editar una tienda deja de requerir deploy.
+ * La URL se cachea con revalidate + tag "tenants"; POST /api/revalidate
+ * fuerza la recarga inmediata.
  */
 
 const KNOWN_BLOCKS = new Set(["hero", "featuredCollection", "banner"]);
@@ -37,15 +44,38 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     fail(id, `theme "${String(themeRef)}" no existe en config/themes (disponibles: ${Object.keys(themes).join(", ")})`);
   }
 
-  const pages = (t.pages ?? {}) as { homepage?: { type?: string }[] };
-  const homepage = (pages.homepage ?? []).filter(
-    (b) => b && KNOWN_BLOCKS.has(b.type ?? ""),
-  ) as Block[];
+  // themeOverrides (opcional): identidad visual propia SIN crear un archivo de
+  // theme — tokens y variantes parciales mezclados sobre el theme base.
+  // Es la vía para themes generados por IA/CMS: puro dato.
+  interface ThemeOverrides {
+    tokens?: Partial<Omit<ThemeTokens, "colors">> & {
+      colors?: Partial<ThemeTokens["colors"]>;
+    };
+    components?: Partial<ComponentVariantMap>;
+  }
+  const base = themes[themeRef];
+  const overrides = t.themeOverrides as ThemeOverrides | undefined;
+  const theme: ThemeConfig = overrides
+    ? {
+        name: `${base.name} (personalizado)`,
+        tokens: {
+          ...base.tokens,
+          ...overrides.tokens,
+          colors: { ...base.tokens.colors, ...(overrides.tokens?.colors ?? {}) },
+        },
+        components: { ...base.components, ...(overrides.components ?? {}) },
+      }
+    : base;
 
   const dataSource = t.dataSource;
   if (dataSource !== undefined && dataSource !== "shopify" && dataSource !== "fixtures") {
     fail(id, `dataSource inválido: "${String(dataSource)}" (usa "shopify" o "fixtures")`);
   }
+
+  const pages = (t.pages ?? {}) as { homepage?: { type?: string }[] };
+  const homepage = (pages.homepage ?? []).filter(
+    (b) => b && KNOWN_BLOCKS.has(b.type ?? ""),
+  ) as Block[];
 
   return {
     id,
@@ -55,19 +85,45 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     domains: Array.isArray(t.domains) ? (t.domains as string[]) : undefined,
     locale: typeof t.locale === "string" ? t.locale : "es-ES",
     branding: t.branding as TenantConfig["branding"],
-    theme: themes[themeRef],
+    theme,
     pages: { homepage },
     shopify: { storeDomain: shopify.storeDomain },
   };
 }
 
-let cache: Map<string, TenantConfig> | null = null;
-
-export function tenantRegistry(): Map<string, TenantConfig> {
-  if (!cache) {
-    cache = new Map(tenantData.map(hydrateTenant).map((t) => [t.id, t]));
+/** Mezcla tenants remotos sobre los del repo (por id, el remoto gana). Pura y testeable. */
+export function mergeTenantData(base: unknown[], remote: unknown[]): unknown[] {
+  const byId = new Map<string, unknown>();
+  for (const t of [...base, ...remote]) {
+    const id = (t as { id?: string })?.id;
+    if (typeof id === "string" && id) byId.set(id, t);
   }
-  return cache;
+  return [...byId.values()];
+}
+
+// Cache solo para el modo sin fuente remota (los JSON del repo no cambian
+// en runtime). Con TENANTS_URL manda la caché de fetch de Next.
+let staticCache: Map<string, TenantConfig> | null = null;
+
+function toRegistry(data: unknown[]): Map<string, TenantConfig> {
+  return new Map(data.map(hydrateTenant).map((t) => [t.id, t]));
+}
+
+export async function tenantRegistry(): Promise<Map<string, TenantConfig>> {
+  const url = process.env.TENANTS_URL;
+  if (!url) {
+    return (staticCache ??= toRegistry(tenantData));
+  }
+  try {
+    const res = await fetch(url, { next: { revalidate: 300, tags: ["tenants"] } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const remote = (await res.json()) as unknown[];
+    if (!Array.isArray(remote)) throw new Error("la respuesta no es un array de tenants");
+    return toRegistry(mergeTenantData(tenantData, remote));
+  } catch (error) {
+    console.error(`TENANTS_URL falló (${url}); usando los tenants del repo:`, error);
+    return toRegistry(tenantData);
+  }
 }
 
 /** Resolución pura por hostname (testeable sin request). */

@@ -94,6 +94,34 @@ UI (Client Component)
   y el webhook resuelve el tenant por `X-Shopify-Shop-Domain`, verifica con
   SU secreto e invalida solo SUS tags.
 
+### Config externa sin deploy (fase 3, opcional)
+
+Con `TENANTS_URL` definida, el registro carga además un array JSON remoto de
+tenants que PISA a los del repo por id (revalidación 300 s, tag `tenants`).
+Editar una tienda deja de requerir deploy; `POST /api/revalidate` con el
+bearer `REVALIDATE_SECRET` aplica cambios al instante. Si la URL falla, se
+sirven los tenants del repo (fail-safe).
+
+### Identidad visual por datos: `themeOverrides` (fase 3)
+
+Un tenant puede llevar `themeOverrides` (tokens y variantes parciales) que se
+mezclan sobre su theme base en la hidratación: identidad visual completa sin
+crear archivos de theme. Es el formato que produce la generación por IA.
+
+### Generación de tiendas por IA (fase 3)
+
+```bash
+node scripts/genera-tienda.mjs \
+  --brief="Tienda de velas artesanales de lujo llamada Lumen" \
+  --store=lumen.myshopify.com --dominio=https://lumen.com \
+  [--colecciones=novedades,esenciales]
+```
+
+Claude (claude-opus-5, structured outputs contra el JSON Schema del tenant)
+diseña naming, copy, paleta accesible, tipografías, variantes y bloques; el
+script lo registra como una tienda más, nacida en fixtures. Requiere
+`ANTHROPIC_API_KEY` (o `ant auth login`) solo al ejecutarlo.
+
 ### Alta de tienda nueva (provisioning)
 
 ```bash

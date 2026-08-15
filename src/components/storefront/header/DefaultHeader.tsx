@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { CartWidget } from "@/components/storefront/cart/CartDrawer";
+import { SearchBox } from "./SearchBox";
 import type { HeaderProps } from "./types";
 
 export function DefaultHeader({ shopName, nav }: HeaderProps) {
@@ -21,7 +22,10 @@ export function DefaultHeader({ shopName, nav }: HeaderProps) {
             </Link>
           ))}
         </nav>
-        <CartWidget />
+        <div className="flex items-center gap-4">
+          <SearchBox />
+          <CartWidget />
+        </div>
       </Container>
     </header>
   );
