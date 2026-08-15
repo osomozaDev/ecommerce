@@ -116,15 +116,23 @@ En el futuro esta config la generará IA/CMS; el patrón ya está.
 - Las páginas del storefront son dinámicas (leen la cookie del carrito en el
   layout); el coste real lo amortigua la caché de datos de fetch.
 
-### Futuro: invalidación por webhook (documentado, no implementado)
+### Invalidación por webhook (implementado)
 
 ```text
-Shopify Webhook (products/update, collections/update)
-  → Route Handler  POST /api/webhooks/shopify   (verificar HMAC)
-  → revalidateTag("product:<handle>") / revalidateTag("products")
+Shopify Webhook (products/*, collections/*)
+  → POST /api/webhooks/shopify        src/app/api/webhooks/shopify/route.ts
+  → verificación HMAC (SHOPIFY_WEBHOOK_SECRET)
+  → revalidateTag("product:<handle>") / revalidateTag("products") / …
 ```
 
-Mientras tanto, la ventana máxima de dato obsoleto es `revalidate` (300 s).
+Alta en Shopify: admin → **Settings → Notifications → Webhooks** → crear
+suscripciones `products/create|update|delete` y
+`collections/create|update|delete` apuntando a
+`https://<dominio>/api/webhooks/shopify` (formato JSON). El secreto de firma
+de esa página va en `SHOPIFY_WEBHOOK_SECRET` (Vercel + .env.local).
+Sin webhooks configurados, la ventana máxima de dato obsoleto sigue siendo
+`revalidate` (300 s) — el sistema funciona igual, solo tarda más en reflejar
+cambios de catálogo.
 
 ## Seguridad
 
