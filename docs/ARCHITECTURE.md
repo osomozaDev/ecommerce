@@ -264,10 +264,27 @@ Panel único para TODAS las tiendas del deploy, protegido por `ADMIN_SECRET`
 constante; sin la variable, el panel queda deshabilitado). Muestra por
 tienda: dominios, data source, presencia de secretos (nunca sus valores),
 conexión REAL con Shopify (`{ shop { name } }` en vivo), analítica, login de
-clientes, estado de legales, theme y bloques. Incluye un validador de JSON
-de tenant (usa el mismo `hydrateTenant` del runtime) y el botón de recarga
-de la config remota cuando hay `TENANTS_URL`. `noindex` + disallow en
-robots.
+clientes, estado de legales, mercados, theme y bloques. Incluye un validador
+de JSON de tenant (usa el mismo `hydrateTenant` del runtime) y el botón de
+recarga de la config remota. `noindex` + disallow en robots.
+
+**Gestión de tiendas sin deploy (consola v2).** La consola ESCRIBE en la
+fuente remota de `TENANTS_URL` (que pisa a los tenants del repo por id):
+
+- **Alta**: formulario "Nueva tienda" (mismos datos que el CLI, legales
+  incluidas) → se valida con `hydrateTenant`, se publica y se revalida. La
+  tienda nace en fixtures y responde en `<id>.localhost` en segundos.
+- **Edición**: `/admin/tenants/<id>` edita el JSON crudo (remoto si existe;
+  si no, el del repo, creando el override remoto al publicar).
+- **Borrado**: elimina tiendas remotas; sobre las del repo solo "quita el
+  override" (el repo es la base versionada y no se toca desde el panel).
+
+Backends del almacén (`src/lib/admin/store.ts`), mismo contrato:
+- **Producción**: Vercel Blob — crear un Blob store (Storage → Blob),
+  definir `BLOB_READ_WRITE_TOKEN` y poner como `TENANTS_URL` la URL que
+  indica la consola al guardar la primera tienda.
+- **Desarrollo/CI**: `TENANTS_URL=file:.dev-tenants.json` — archivo local
+  gitignored que el registry lee de disco (sin red, siempre fresco).
 
 ### Alta de tienda nueva (provisioning)
 

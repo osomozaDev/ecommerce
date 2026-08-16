@@ -240,7 +240,7 @@ test("la consola /admin protege el acceso y muestra la flota", async ({ page }) 
   ).toBeVisible();
 
   // El validador acepta un tenant válido y rechaza uno roto
-  const textarea = page.getByPlaceholder(/cliente-x/);
+  const textarea = page.locator('textarea[name="json"]');
   await textarea.fill(
     JSON.stringify({
       id: "prueba",
@@ -283,6 +283,36 @@ test("los emails transaccionales se previsualizan brandeados por tenant", async 
   // El código Liquid está listo para pegar en Shopify
   await page.getByText("Ver código Liquid", { exact: false }).first().click();
   await expect(page.getByText("{% for line in subtotal_line_items %}")).toBeVisible();
+});
+
+test("la consola crea una tienda nueva que queda viva al instante (sin deploy)", async ({ page }) => {
+  // Login en la consola
+  await page.goto("/admin");
+  await page.getByLabel("Clave de acceso").fill("test-admin");
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByRole("heading", { name: "Nueva tienda" })).toBeVisible();
+
+  // Alta desde el formulario
+  await page.getByLabel("id (minúsculas y guiones)").fill("demo-e2e");
+  await page.getByLabel("Nombre").fill("Demo E2E");
+  await page.getByLabel("Tienda Shopify").fill("demo-e2e.myshopify.com");
+  await page.getByLabel("Dominio público").fill("https://demo-e2e.example.com");
+  await page.getByLabel("Razón social").fill("Demo E2E S.L.");
+  await page.getByRole("button", { name: "Crear tienda" }).click();
+  await expect(page.getByText(/Guardado ✓ — "demo-e2e"/)).toBeVisible();
+
+  // La tienda responde en su dominio inmediatamente, con branding propio
+  await page.goto("http://demo-e2e.localhost:3100/");
+  await expect(page.getByRole("banner").getByText("Demo E2E")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Demo E2E" }).first()).toBeVisible();
+
+  // Y aparece en la flota como remota; se elimina y desaparece
+  await page.goto("/admin");
+  const card = page.locator("article", { hasText: "demo-e2e · remota" });
+  await expect(card).toBeVisible();
+  await card.getByRole("button", { name: "eliminar" }).click();
+  await expect(page).toHaveURL(/ok=override-eliminado/);
+  await expect(page.locator("article", { hasText: "demo-e2e" })).toHaveCount(0);
 });
 
 test("el laboratorio de diseño funciona con fixtures", async ({ page }) => {

@@ -23,6 +23,7 @@ export default defineConfig({
       COMMERCE_DATA_SOURCE: "fixtures",
       TENANT_ID: "default",
       ADMIN_SECRET: "test-admin",
+      TENANTS_URL: "file:.dev-tenants.json",
     },
   },
 });

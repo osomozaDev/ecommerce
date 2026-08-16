@@ -1,8 +1,18 @@
+import Link from "next/link";
 import { tenantRegistry } from "@/lib/tenant/registry";
 import type { TenantConfig } from "@/lib/tenant/types";
+import { tenantData } from "@/config/tenants";
+import { themes } from "@/config/themes";
 import { shopifyFetch, tenantSecret } from "@/lib/commerce/shopify/client";
 import { adminSecretConfigured, isAdminAuthed } from "@/lib/admin/auth";
-import { loginAction, logoutAction, revalidateTenantsAction } from "./actions";
+import { readStoredTenants, tenantStoreInfo } from "@/lib/admin/store";
+import {
+  deleteTenantAction,
+  loginAction,
+  logoutAction,
+  revalidateTenantsAction,
+} from "./actions";
+import { NewTenantForm } from "./NewTenantForm";
 import { TenantValidator } from "./TenantValidator";
 
 /**
@@ -90,8 +100,16 @@ export default async function AdminPage({ searchParams }: Props) {
     );
   }
 
-  const tenants = [...(await tenantRegistry()).values()];
+  const [registry, stored] = await Promise.all([tenantRegistry(), readStoredTenants()]);
+  const tenants = [...registry.values()];
   const statuses = await Promise.all(tenants.map((t) => shopifyStatus(t)));
+  const remoteIds = new Set(
+    stored.map((t) => (t as { id?: string })?.id).filter(Boolean),
+  );
+  const repoIds = new Set(
+    (tenantData as unknown[]).map((t) => (t as { id?: string })?.id).filter(Boolean),
+  );
+  const store = tenantStoreInfo();
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-10">
@@ -141,17 +159,41 @@ export default async function AdminPage({ searchParams }: Props) {
                 <h2 className="font-heading text-lg font-semibold">
                   {tenant.branding.name}
                   <span className="ml-2 font-body text-xs font-normal text-muted">
-                    {tenant.id}
+                    {tenant.id} · {remoteIds.has(tenant.id) ? "remota" : "repo"}
                   </span>
                 </h2>
-                <a
-                  href={tenant.domain}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm text-muted underline hover:text-ink"
-                >
-                  abrir ↗
-                </a>
+                <div className="flex items-center gap-3 text-sm">
+                  <Link
+                    href={`/admin/tenants/${tenant.id}`}
+                    className="text-muted underline hover:text-ink"
+                  >
+                    editar
+                  </Link>
+                  <a
+                    href={tenant.domain}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted underline hover:text-ink"
+                  >
+                    abrir ↗
+                  </a>
+                  {remoteIds.has(tenant.id) && (
+                    <form action={deleteTenantAction}>
+                      <input type="hidden" name="id" value={tenant.id} />
+                      <button
+                        type="submit"
+                        className="text-red-600 underline hover:opacity-80"
+                        title={
+                          repoIds.has(tenant.id)
+                            ? "Quitar el override remoto (vuelve la versión del repo)"
+                            : "Eliminar la tienda remota"
+                        }
+                      >
+                        {repoIds.has(tenant.id) ? "quitar override" : "eliminar"}
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
                 <dt className="text-muted">Dominios</dt>
@@ -198,6 +240,25 @@ export default async function AdminPage({ searchParams }: Props) {
             </article>
           );
         })}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="font-heading text-lg font-semibold">Nueva tienda</h2>
+        <p className="text-sm text-muted">
+          Alta instantánea sin deploy: se valida, se publica en el almacén remoto (
+          {store.backend === "blob"
+            ? "Vercel Blob"
+            : store.backend === "dev-file"
+              ? "archivo local de desarrollo"
+              : "SIN configurar"}
+          ) y nace en fixtures en <code>&lt;id&gt;.localhost</code>.
+        </p>
+        {store.hint && (
+          <p className="rounded-base border border-line bg-surface p-3 text-sm text-muted">
+            ⚠️ {store.hint}
+          </p>
+        )}
+        {store.backend && <NewTenantForm themes={Object.keys(themes)} />}
       </section>
 
       <section className="flex flex-col gap-3">

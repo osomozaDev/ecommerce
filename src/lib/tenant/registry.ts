@@ -159,7 +159,19 @@ export async function tenantRegistry(): Promise<Map<string, TenantConfig>> {
     return (staticCache ??= toRegistry(tenantData));
   }
   try {
+    // Esquema file: (desarrollo/CI): lectura directa de disco — sin red,
+    // sin caché (siempre fresco) y sin auto-fetch al propio dev server.
+    if (url.startsWith("file:")) {
+      const { readFile } = await import("node:fs/promises");
+      const raw = await readFile(url.slice("file:".length), "utf8").catch(() => null);
+      if (raw === null) return toRegistry(tenantData); // aún sin publicar
+      const remote = JSON.parse(raw) as unknown[];
+      if (!Array.isArray(remote)) throw new Error("el archivo no es un array de tenants");
+      return toRegistry(mergeTenantData(tenantData, remote));
+    }
     const res = await fetch(url, { next: { revalidate: 300, tags: ["tenants"] } });
+    // 404 = fuente remota aún sin publicar (la crea la consola): no es un error.
+    if (res.status === 404) return toRegistry(tenantData);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const remote = (await res.json()) as unknown[];
     if (!Array.isArray(remote)) throw new Error("la respuesta no es un array de tenants");
