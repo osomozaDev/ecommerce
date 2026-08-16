@@ -72,6 +72,19 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     fail(id, `dataSource inválido: "${String(dataSource)}" (usa "shopify" o "fixtures")`);
   }
 
+  const customerAccount = t.customerAccount as
+    | { shopId?: unknown; clientId?: unknown }
+    | undefined;
+  if (
+    customerAccount &&
+    (typeof customerAccount.shopId !== "string" ||
+      !customerAccount.shopId ||
+      typeof customerAccount.clientId !== "string" ||
+      !customerAccount.clientId)
+  ) {
+    fail(id, "customerAccount requiere shopId y clientId (strings no vacíos)");
+  }
+
   const pages = (t.pages ?? {}) as { homepage?: { type?: string }[] };
   const homepage = (pages.homepage ?? []).filter(
     (b) => b && KNOWN_BLOCKS.has(b.type ?? ""),
@@ -86,6 +99,7 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     locale: typeof t.locale === "string" ? t.locale : "es-ES",
     branding: t.branding as TenantConfig["branding"],
     analytics: t.analytics as TenantConfig["analytics"],
+    customerAccount: customerAccount as TenantConfig["customerAccount"],
     theme,
     pages: { homepage },
     shopify: { storeDomain: shopify.storeDomain },

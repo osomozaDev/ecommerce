@@ -161,6 +161,11 @@ ghost), `Price` (con precio tachado), `Badge`. Amplíalas ahí.
 
 Componentes de storefront con variantes: `header`, `hero`, `product-card`,
 `collection-card`, `product-grid`, `filter-bar` (ordenación y filtros de
-catálogo), `product-detail`, `cart` (vista completa), `banner`, `footer`. Además, `cart/CartDrawer.tsx` es el botón + panel lateral
+catálogo), `product-detail`, `reviews` (reseñas bajo la ficha; recibe un
+`ProductReviews` con la media ya calculada y no se pinta si no hay reseñas),
+`cart` (vista completa), `banner`, `consent-banner` (aviso de cookies; solo
+aparece en tiendas con analítica de terceros configurada — al restilizarlo,
+conserva los dos botones y las llamadas a `setConsentClient`), `footer`.
+Además, `cart/CartDrawer.tsx` es el botón + panel lateral
 del carrito que usa el header: es tuyo para restilizar (usa `useCart()`, no
 toca Shopify).

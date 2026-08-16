@@ -8,8 +8,10 @@ import type {
   GetProductsOptions,
 } from "../provider";
 import { money } from "../money";
+import { summarizeReviews } from "../reviews";
 import { fixtureProducts, findFixtureProduct, findFixtureVariant } from "@/fixtures/products";
 import { fixtureCollections, fixtureCollectionProducts } from "@/fixtures/collections";
+import { fixtureReviews } from "@/fixtures/reviews";
 
 /**
  * Provider de fixtures: sirve el catálogo de src/fixtures y simula el carrito
@@ -108,6 +110,10 @@ export const fixturesProvider: CommerceProvider = {
       hasNextPage: end < all.length,
       endCursor: page.length > 0 ? String(end) : null,
     };
+  },
+
+  async getProductReviews(handle) {
+    return summarizeReviews(fixtureReviews[handle] ?? []);
   },
 
   async createCart() {

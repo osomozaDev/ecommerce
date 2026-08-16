@@ -71,6 +71,25 @@ export interface ProductList {
   endCursor: string | null;
 }
 
+export interface Review {
+  id: string;
+  author: string;
+  /** Entero 1–5. */
+  rating: number;
+  title?: string;
+  body: string;
+  /** Fecha ya formateada con el locale del tenant — la UI nunca formatea. */
+  date: string;
+}
+
+/** Reseñas de un producto con el agregado ya calculado. */
+export interface ProductReviews {
+  /** Media redondeada a 1 decimal (0 si no hay reseñas). */
+  averageRating: number;
+  count: number;
+  reviews: Review[];
+}
+
 export interface Collection {
   id: string;
   handle: string;

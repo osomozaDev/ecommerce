@@ -29,8 +29,10 @@ export const themeB: ThemeConfig = {
     productGrid: "default",
     filterBar: "default",
     productDetail: "default",
+    reviews: "default",
     cart: "default",
     banner: "default",
+    consentBanner: "default",
     footer: "default",
   },
 };

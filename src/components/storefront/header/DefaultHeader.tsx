@@ -4,7 +4,7 @@ import { CartWidget } from "@/components/storefront/cart/CartDrawer";
 import { SearchBox } from "./SearchBox";
 import type { HeaderProps } from "./types";
 
-export function DefaultHeader({ shopName, nav }: HeaderProps) {
+export function DefaultHeader({ shopName, nav, accountHref }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
       <Container className="flex h-16 items-center justify-between gap-6">
@@ -24,6 +24,14 @@ export function DefaultHeader({ shopName, nav }: HeaderProps) {
         </nav>
         <div className="flex items-center gap-4">
           <SearchBox />
+          {accountHref && (
+            <Link
+              href={accountHref}
+              className="text-sm text-muted transition-colors hover:text-ink"
+            >
+              Cuenta
+            </Link>
+          )}
           <CartWidget />
         </div>
       </Container>

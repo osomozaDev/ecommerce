@@ -105,6 +105,52 @@ test("los eventos de analítica llegan al dataLayer", async ({ page }) => {
   });
 });
 
+test("las reseñas se muestran en la ficha de producto", async ({ page }) => {
+  await page.goto("/productos/vela-ambar");
+  const reviews = page.getByRole("region", { name: "Reseñas" });
+  await expect(reviews.getByRole("heading", { name: "Reseñas" })).toBeVisible();
+  // 5 + 4 + 5 en fixtures → media 4.7 con 3 reseñas
+  await expect(reviews.getByText("4.7 · 3 reseñas")).toBeVisible();
+  await expect(reviews.getByText("Huele a hogar")).toBeVisible();
+  await expect(reviews.getByText("Marta G.", { exact: false })).toBeVisible();
+
+  // Un producto sin reseñas no muestra la sección
+  await page.goto("/productos/espejo-orbita");
+  await expect(page.getByRole("region", { name: "Reseñas" })).toHaveCount(0);
+});
+
+test("el banner de consentimiento solo aparece con vendor configurado", async ({ page }) => {
+  // Stellazon (default) no tiene vendor de analítica: sin banner
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "Aviso de cookies" })).toHaveCount(0);
+
+  // Norte Atelier tiene GA4 configurado: banner visible y cero scripts hasta decidir
+  await page.goto("http://tienda-b.localhost:3100/");
+  const banner = page.getByRole("region", { name: "Aviso de cookies" });
+  await expect(banner).toBeVisible();
+  await expect(page.locator('script[src*="googletagmanager"]')).toHaveCount(0);
+
+  // Rechazar: desaparece, la decisión persiste y sigue sin cargarse ningún vendor
+  await banner.getByRole("button", { name: "Rechazar" }).click();
+  await expect(banner).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Aviso de cookies" })).toHaveCount(0);
+  await expect(page.locator('script[src*="googletagmanager"]')).toHaveCount(0);
+});
+
+test("la cuenta de cliente informa cuando la tienda no tiene login activado", async ({ page }) => {
+  // El tenant default no define customerAccount: sin enlace en el header
+  await page.goto("/");
+  await expect(page.getByRole("banner").getByRole("link", { name: "Cuenta" })).toHaveCount(0);
+
+  // La página existe igualmente y explica el estado (sin romper)
+  await page.goto("/cuenta");
+  await expect(page.getByRole("heading", { level: 1, name: "Mi cuenta" })).toBeVisible();
+  await expect(
+    page.getByText("Esta tienda aún no tiene activado el acceso de clientes."),
+  ).toBeVisible();
+});
+
 test("el laboratorio de diseño funciona con fixtures", async ({ page }) => {
   await page.goto("/dev/design-system");
   await expect(page.getByRole("heading", { level: 1, name: "Design System" })).toBeVisible();

@@ -9,6 +9,9 @@
     "name": "Norte Atelier",
     "tagline": "Diseño nórdico contemporáneo"
   },
+  "analytics": {
+    "ga4MeasurementId": "G-DEMO000000"
+  },
   "theme": "theme-b",
   "pages": {
     "homepage": [

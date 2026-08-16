@@ -39,6 +39,19 @@ export interface TenantConfig {
     /** Dominio configurado en Plausible, ej. "tienda.com". */
     plausibleDomain?: string;
   };
+  /**
+   * Login de clientes (Customer Account API, OAuth + PKCE). Ambos valores son
+   * identificadores PÚBLICOS de un cliente OAuth "public" (viajan en la URL de
+   * autorización): se obtienen en el admin — Sales channels → Headless (o
+   * Hydrogen) → Customer Account API. Sin este bloque, /cuenta queda
+   * deshabilitada para la tienda.
+   */
+  customerAccount?: {
+    /** Id numérico de la tienda, ej. "60857843734" (aparece en las URLs de la API). */
+    shopId: string;
+    /** Client ID del cliente OAuth, ej. "shp_xxxxx". */
+    clientId: string;
+  };
   theme: ThemeConfig;
   pages: {
     homepage: Block[];

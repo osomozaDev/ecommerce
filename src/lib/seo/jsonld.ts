@@ -1,4 +1,4 @@
-import type { Collection, Product } from "@/lib/commerce/types";
+import type { Collection, Product, ProductReviews } from "@/lib/commerce/types";
 import type { TenantConfig } from "@/lib/tenant/types";
 
 /**
@@ -10,7 +10,11 @@ function absoluteUrl(pathOrUrl: string, tenant: TenantConfig): string {
   return pathOrUrl.startsWith("http") ? pathOrUrl : `${tenant.domain}${pathOrUrl}`;
 }
 
-export function productJsonLd(product: Product, tenant: TenantConfig) {
+export function productJsonLd(
+  product: Product,
+  tenant: TenantConfig,
+  reviews?: ProductReviews,
+) {
   const url = absoluteUrl(product.href, tenant);
   const prices = product.variants.map((v) => v.price.amount);
   const currency = product.price.currencyCode;
@@ -47,6 +51,23 @@ export function productJsonLd(product: Product, tenant: TenantConfig) {
     url,
     brand: { "@type": "Brand", name: tenant.branding.name },
     offers,
+    ...(reviews && reviews.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: reviews.averageRating,
+            reviewCount: reviews.count,
+            bestRating: 5,
+          },
+          review: reviews.reviews.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.author },
+            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+            ...(r.title ? { name: r.title } : {}),
+            reviewBody: r.body,
+          })),
+        }
+      : {}),
   };
 }
 

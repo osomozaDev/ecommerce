@@ -2,10 +2,12 @@ import "server-only";
 import { getTenant } from "@/lib/tenant/resolve";
 import type { CommerceProvider, GetProductsOptions } from "../provider";
 import { CACHE_TAGS, shopifyFetch } from "./client";
-import { mapCart, mapCollection, mapProduct } from "./mappers";
+import { summarizeReviews } from "../reviews";
+import { mapCart, mapCollection, mapProduct, mapReviewMetaobject } from "./mappers";
 import type {
   ShopifyCart,
   ShopifyCollection,
+  ShopifyMetaobject,
   ShopifyProduct,
 } from "./types";
 import {
@@ -17,6 +19,7 @@ import {
   GET_COLLECTIONS_QUERY,
 } from "./queries/collections";
 import { GET_CART_QUERY } from "./queries/cart";
+import { GET_REVIEWS_QUERY } from "./queries/reviews";
 import {
   CART_CREATE_MUTATION,
   CART_LINES_ADD_MUTATION,
@@ -181,6 +184,30 @@ export const shopifyProvider: CommerceProvider = {
       hasNextPage: data.collection.products.pageInfo.hasNextPage,
       endCursor: data.collection.products.pageInfo.endCursor,
     };
+  },
+
+  async getProductReviews(handle) {
+    const tenant = await getTenant();
+    try {
+      const data = await shopifyFetch<{
+        metaobjects: { nodes: ShopifyMetaobject[] };
+      }>({
+        query: GET_REVIEWS_QUERY,
+        variables: { first: 200 },
+        tags: [CACHE_TAGS.reviews(tenant.id)],
+        tenant,
+      });
+      const reviews = data.metaobjects.nodes
+        .map((n) => mapReviewMetaobject(n, tenant.locale))
+        .filter((r) => r !== null)
+        .filter((r) => r.productHandle === handle)
+        .map((r) => r.review);
+      return summarizeReviews(reviews);
+    } catch {
+      // Fail-safe: tienda sin el metaobjeto "review" (o sin acceso Storefront
+      // al mismo) = tienda sin reseñas. Nunca rompe la ficha de producto.
+      return summarizeReviews([]);
+    }
   },
 
   async createCart() {

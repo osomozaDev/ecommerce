@@ -5,9 +5,12 @@ import { getCartAction } from "@/lib/cart/actions";
 import { CartProvider } from "@/lib/cart/cart-context";
 import { Header } from "@/components/storefront/header";
 import { Footer } from "@/components/storefront/footer";
+import { ConsentBanner } from "@/components/storefront/consent-banner";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { organizationJsonLd } from "@/lib/seo/jsonld";
 import { AnalyticsScripts } from "@/lib/analytics/AnalyticsScripts";
+import { hasAnalyticsVendor } from "@/lib/analytics/consent";
+import { getConsent } from "@/lib/analytics/consent-server";
 
 /**
  * Layout del storefront: resuelve tenant, carrito inicial (cookie) y
@@ -16,9 +19,10 @@ import { AnalyticsScripts } from "@/lib/analytics/AnalyticsScripts";
  */
 export default async function StorefrontLayout({ children }: { children: ReactNode }) {
   const tenant = await getTenant();
-  const [initialCart, collections] = await Promise.all([
+  const [initialCart, collections, consent] = await Promise.all([
     getCartAction(),
     getCommerce().getCollections(),
+    getConsent(),
   ]);
 
   const nav = [
@@ -31,13 +35,20 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
     <CartProvider initialCart={initialCart}>
       <JsonLd data={organizationJsonLd(tenant)} />
       <AnalyticsScripts tenant={tenant} />
-      <Header shopName={tenant.branding.name} nav={nav} />
+      <Header
+        shopName={tenant.branding.name}
+        nav={nav}
+        accountHref={tenant.customerAccount ? "/cuenta" : undefined}
+      />
       <main className="flex-1">{children}</main>
       <Footer
         shopName={tenant.branding.name}
         tagline={tenant.branding.tagline}
         nav={nav}
       />
+      {hasAnalyticsVendor(tenant.analytics) && consent === null && (
+        <ConsentBanner shopName={tenant.branding.name} />
+      )}
     </CartProvider>
   );
 }

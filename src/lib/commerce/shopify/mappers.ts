@@ -7,6 +7,7 @@ import type {
   Money,
   Product,
   ProductVariant,
+  Review,
 } from "../types";
 import { money } from "../money";
 import type {
@@ -14,6 +15,7 @@ import type {
   ShopifyCartLine,
   ShopifyCollection,
   ShopifyImage,
+  ShopifyMetaobject,
   ShopifyMoney,
   ShopifyProduct,
   ShopifyVariant,
@@ -106,6 +108,44 @@ export function mapCollection(c: ShopifyCollection): Collection {
     seo: {
       title: c.seo.title ?? c.title,
       description: c.seo.description ?? c.description.slice(0, 155),
+    },
+  };
+}
+
+/**
+ * Metaobjeto "review" → Review + handle del producto al que pertenece.
+ * Devuelve null si faltan campos imprescindibles o el rating no es 1–5:
+ * una reseña mal cargada en el admin no debe romper la ficha.
+ */
+export function mapReviewMetaobject(
+  node: ShopifyMetaobject,
+  locale: string,
+): { productHandle: string; review: Review } | null {
+  const fields = new Map(node.fields.map((f) => [f.key, f.value]));
+  const productHandle = fields.get("product");
+  const author = fields.get("author");
+  const body = fields.get("body");
+  const rating = Number(fields.get("rating"));
+
+  if (!productHandle || !author || !body) return null;
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return null;
+
+  const rawDate = fields.get("date");
+  const parsed = rawDate ? new Date(rawDate) : null;
+  const date =
+    parsed && !Number.isNaN(parsed.getTime())
+      ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(parsed)
+      : "";
+
+  return {
+    productHandle,
+    review: {
+      id: node.id,
+      author,
+      rating,
+      title: fields.get("title") ?? undefined,
+      body,
+      date,
     },
   };
 }

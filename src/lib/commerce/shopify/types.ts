@@ -82,3 +82,9 @@ export interface ShopifyCart {
   };
   lines: { nodes: ShopifyCartLine[] };
 }
+
+/** Metaobjeto crudo (tipo "review"): pares clave/valor definidos en el admin. */
+export interface ShopifyMetaobject {
+  id: string;
+  fields: { key: string; value: string | null }[];
+}

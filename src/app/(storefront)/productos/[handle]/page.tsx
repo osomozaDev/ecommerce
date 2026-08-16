@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductDetail } from "@/components/storefront/product-detail";
+import { Reviews } from "@/components/storefront/reviews";
 import { getCommerce } from "@/lib/commerce/provider";
 import { getTenant } from "@/lib/tenant/resolve";
 import { JsonLd } from "@/lib/seo/json-ld";
@@ -29,15 +30,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductoPage({ params }: Props) {
   const { handle } = await params;
-  const product = await getCommerce().getProduct(handle);
+  const [product, reviews] = await Promise.all([
+    getCommerce().getProduct(handle),
+    getCommerce().getProductReviews(handle),
+  ]);
   if (!product) notFound();
   const tenant = await getTenant();
   return (
     <>
-      <JsonLd data={productJsonLd(product, tenant)} />
+      <JsonLd data={productJsonLd(product, tenant, reviews)} />
       <JsonLd data={breadcrumbJsonLd(productBreadcrumb(product), tenant)} />
       <TrackViewItem product={product} />
       <ProductDetail product={product} />
+      <Reviews reviews={reviews} />
     </>
   );
 }

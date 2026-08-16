@@ -135,9 +135,56 @@ secretos:
 "analytics": { "ga4MeasurementId": "G-XXXXXXXXXX", "plausibleDomain": "tienda.com" }
 ```
 
-Sin configuración no se carga ningún script externo. ⚠️ Si se activa un
-vendor para una tienda con tráfico UE, esa tienda necesita banner de
-consentimiento antes de producción (pieza de plataforma pendiente).
+Sin configuración no se carga ningún script externo.
+
+**Consentimiento (RGPD)**: si el tenant define un vendor, el layout muestra
+el banner de cookies (`consent-banner`, variantable) hasta que el visitante
+decide; la decisión vive 180 días en la cookie `cookie_consent` y
+`AnalyticsScripts` solo inyecta vendors con consentimiento CONCEDIDO
+(`src/lib/analytics/consent.ts` / `consent-server.ts`). Con rechazo o sin
+decisión: cero scripts de terceros (verificado en e2e). Los eventos de
+dataLayer son first-party y no requieren banner, por eso una tienda sin
+vendor no lo muestra.
+
+### Reseñas de producto (fase 3)
+
+`getProductReviews(handle)` en el provider devuelve `ProductReviews`
+(media, total y lista con fecha ya formateada). En fixtures salen de
+`src/fixtures/reviews.ts`; en Shopify se modelan como **metaobjetos** de
+tipo `review` (Settings → Custom data → Metaobjects, con acceso Storefront),
+campos: `product` (handle), `author`, `rating` (1–5), `title`, `body`,
+`date`. Si la tienda no define el metaobjeto, degrada a "sin reseñas" sin
+romper la ficha (fail-safe, verificado contra Stellazon). La ficha añade
+`aggregateRating` + `review` al JSON-LD cuando hay reseñas (rich results),
+y el componente variantable `reviews` las pinta bajo el detalle.
+
+### Cuentas de cliente (fase 3 — Customer Account API)
+
+Login de clientes SIN contraseñas propias: OAuth 2.0 + PKCE contra el login
+alojado de Shopify (cliente "public", sin client_secret). Todo en
+`src/lib/customer/` + `app/api/cuenta/*`:
+
+```text
+/cuenta (sin sesión) → GET /api/cuenta/login   (PKCE + state en cookie efímera)
+  → login alojado de Shopify → GET /api/cuenta/callback (valida state, canjea code)
+  → cookie httpOnly customer_session (tokens; jamás legibles por JS)
+  → /cuenta: perfil + pedidos vía Customer Account API GraphQL (no-store)
+  · access token caducado → /api/cuenta/refresh (rota el refresh token)
+  · /api/cuenta/logout → borra cookie + cierra la sesión en Shopify (id_token)
+```
+
+Se activa POR TENANT en su JSON (identificadores públicos, no secretos):
+
+```json
+"customerAccount": { "shopId": "60857843734", "clientId": "shp_xxxxx" }
+```
+
+Alta en el admin (una vez por tienda): **Sales channels → Headless (o
+Hydrogen) → Customer Account API** → copiar el Client ID y el shop id, y
+registrar los callback URIs (`https://<dominio>/api/cuenta/callback` y
+`http://localhost:3000/api/cuenta/callback` para desarrollo) y el logout
+URI (el dominio). Sin el bloque `customerAccount`, `/cuenta` explica que la
+tienda no tiene login y el header no muestra el enlace "Cuenta".
 
 ### Alta de tienda nueva (provisioning)
 

@@ -36,8 +36,10 @@ export interface ComponentVariantMap {
   productGrid: string;
   filterBar: string;
   productDetail: string;
+  reviews: string;
   cart: string;
   banner: string;
+  consentBanner: string;
   footer: string;
 }
 

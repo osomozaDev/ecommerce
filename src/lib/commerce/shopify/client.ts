@@ -93,4 +93,5 @@ export const CACHE_TAGS = {
   product: (tenantId: string, handle: string) => `t:${tenantId}:product:${handle}`,
   collections: (tenantId: string) => `t:${tenantId}:collections`,
   collection: (tenantId: string, handle: string) => `t:${tenantId}:collection:${handle}`,
+  reviews: (tenantId: string) => `t:${tenantId}:reviews`,
 } as const;

@@ -1,5 +1,5 @@
 import "server-only";
-import type { Cart, Collection, Product, ProductList } from "./types";
+import type { Cart, Collection, Product, ProductList, ProductReviews } from "./types";
 import { fixturesProvider } from "./fixtures/provider";
 import { shopifyProvider } from "./shopify/provider";
 import { getTenant } from "@/lib/tenant/resolve";
@@ -51,6 +51,9 @@ export interface CommerceProvider {
     endCursor: string | null;
   } | null>;
 
+  /** Reseñas del producto. Siempre resuelve (sin reseñas → agregado vacío). */
+  getProductReviews(handle: string): Promise<ProductReviews>;
+
   createCart(): Promise<Cart>;
   getCart(cartId: string): Promise<Cart | null>;
   addCartLines(cartId: string, lines: CartLineInput[]): Promise<Cart>;
@@ -80,6 +83,7 @@ export function getCommerce(): CommerceProvider {
     getProduct: async (h) => (await pickProvider()).getProduct(h),
     getCollections: async () => (await pickProvider()).getCollections(),
     getCollection: async (h, o) => (await pickProvider()).getCollection(h, o),
+    getProductReviews: async (h) => (await pickProvider()).getProductReviews(h),
     createCart: async () => (await pickProvider()).createCart(),
     getCart: async (id) => (await pickProvider()).getCart(id),
     addCartLines: async (id, l) => (await pickProvider()).addCartLines(id, l),
