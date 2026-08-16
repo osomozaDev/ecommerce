@@ -12,6 +12,13 @@
   "analytics": {
     "ga4MeasurementId": "G-DEMO000000"
   },
+  "legal": {
+    "companyName": "Norte Atelier S.L.",
+    "taxId": "B-00000000",
+    "address": "Calle del Puerto 12, 33201 Gijón, Asturias",
+    "email": "hola@norte-atelier.example.com",
+    "returnDays": 30
+  },
   "theme": "theme-b",
   "pages": {
     "homepage": [

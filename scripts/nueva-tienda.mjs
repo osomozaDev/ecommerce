@@ -10,6 +10,9 @@
  *     --store=cliente-x.myshopify.com \
  *     --dominio=https://cliente-x.com \
  *     [--tagline="..."] [--theme=theme-a] [--locale=es-ES] \
+ *     [--razon-social="Cliente X S.L."] [--nif=B12345678] \
+ *     [--direccion="Calle Mayor 1, Madrid"] [--email=hola@cliente-x.com] \
+ *     [--dias-devolucion=14] \
  *     [--webhooks-endpoint=https://mi-deploy.vercel.app] [--admin-token=shpat_...]
  *
  * El admin-token (scope write_webhooks) SOLO se usa en esta ejecución para
@@ -73,6 +76,15 @@ const tenant = {
     ],
   },
   shopify: { storeDomain: store },
+  // Rellena las páginas /legal/* de la tienda. Lo que falte aparece marcado
+  // como pendiente en la propia página.
+  legal: {
+    companyName: args["razon-social"] ?? nombre,
+    ...(args.nif ? { taxId: args.nif } : {}),
+    ...(args.direccion ? { address: args.direccion } : {}),
+    ...(args.email ? { email: args.email } : {}),
+    ...(args["dias-devolucion"] ? { returnDays: Number(args["dias-devolucion"]) } : {}),
+  },
 };
 writeFileSync(jsonPath, JSON.stringify(tenant, null, 2) + "\n");
 console.log(`✓ Creado src/config/tenants/${id}.json`);
@@ -141,5 +153,8 @@ Pasos restantes:
   3. Prueba local: pnpm dev y abre http://${id}.localhost:3000
      (la tienda nace en modo fixtures; cuando el token esté configurado,
       cambia "dataSource" a "shopify" en su JSON)
-  4. Commit + push: el deploy sale solo.
+  4. Legales: revisa http://${id}.localhost:3000/legal/aviso-legal — los datos
+     que no pasaste por flags (--razon-social, --nif, --direccion, --email)
+     aparecen como pendientes hasta completar el bloque "legal" del JSON.
+  5. Commit + push: el deploy sale solo.
 `);

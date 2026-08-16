@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import type { FooterProps } from "./types";
 
-export function DefaultFooter({ shopName, tagline, nav }: FooterProps) {
+export function DefaultFooter({ shopName, tagline, nav, legalNav }: FooterProps) {
   return (
     <footer className="mt-[var(--section-gap)] border-t border-line">
       <Container className="flex flex-col gap-8 py-12">
@@ -23,10 +23,25 @@ export function DefaultFooter({ shopName, tagline, nav }: FooterProps) {
             ))}
           </nav>
         </div>
-        <p className="text-xs text-muted">
-          © {new Date().getFullYear()} {shopName}. Pagos gestionados de forma segura por
-          Shopify.
-        </p>
+        <div className="flex flex-col gap-3 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} {shopName}. Pagos gestionados de forma segura por
+            Shopify.
+          </p>
+          {legalNav && legalNav.length > 0 && (
+            <nav className="flex flex-wrap gap-x-4 gap-y-1">
+              {legalNav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="transition-colors hover:text-ink"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
       </Container>
     </footer>
   );

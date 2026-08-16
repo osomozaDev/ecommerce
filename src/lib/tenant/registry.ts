@@ -85,6 +85,11 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     fail(id, "customerAccount requiere shopId y clientId (strings no vacíos)");
   }
 
+  const legal = t.legal as { companyName?: unknown } | undefined;
+  if (legal && (typeof legal.companyName !== "string" || !legal.companyName)) {
+    fail(id, "legal requiere companyName (razón social)");
+  }
+
   const pages = (t.pages ?? {}) as { homepage?: { type?: string }[] };
   const homepage = (pages.homepage ?? []).filter(
     (b) => b && KNOWN_BLOCKS.has(b.type ?? ""),
@@ -100,6 +105,7 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     branding: t.branding as TenantConfig["branding"],
     analytics: t.analytics as TenantConfig["analytics"],
     customerAccount: customerAccount as TenantConfig["customerAccount"],
+    legal: legal as TenantConfig["legal"],
     theme,
     pages: { homepage },
     shopify: { storeDomain: shopify.storeDomain },

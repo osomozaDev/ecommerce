@@ -8,6 +8,9 @@
     "name": "Stellazon",
     "tagline": "Material de montaña seleccionado"
   },
+  "legal": {
+    "companyName": "Stellazon"
+  },
   "theme": "theme-a",
   "pages": {
     "homepage": [

@@ -52,6 +52,22 @@ export interface TenantConfig {
     /** Client ID del cliente OAuth, ej. "shp_xxxxx". */
     clientId: string;
   };
+  /**
+   * Datos registrales para las páginas legales (/legal/*). Las plantillas
+   * viven UNA vez en el engine (lib/legal) y se rellenan con este bloque;
+   * lo que falte se señala en la página como pendiente de configurar.
+   */
+  legal?: {
+    /** Razón social del titular de la tienda. */
+    companyName: string;
+    /** NIF/CIF. */
+    taxId?: string;
+    address?: string;
+    /** Email de contacto para derechos RGPD y devoluciones. */
+    email?: string;
+    /** Días de desistimiento. Por defecto 14 (mínimo legal UE). */
+    returnDays?: number;
+  };
   theme: ThemeConfig;
   pages: {
     homepage: Block[];

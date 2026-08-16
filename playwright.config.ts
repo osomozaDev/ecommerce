@@ -22,6 +22,7 @@ export default defineConfig({
     env: {
       COMMERCE_DATA_SOURCE: "fixtures",
       TENANT_ID: "default",
+      ADMIN_SECRET: "test-admin",
     },
   },
 });

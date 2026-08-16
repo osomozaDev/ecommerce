@@ -186,6 +186,30 @@ registrar los callback URIs (`https://<dominio>/api/cuenta/callback` y
 URI (el dominio). Sin el bloque `customerAccount`, `/cuenta` explica que la
 tienda no tiene login y el header no muestra el enlace "Cuenta".
 
+### Páginas legales por plantilla (fase 4)
+
+`/legal/aviso-legal · privacidad · cookies · devoluciones`. La plantilla vive
+UNA vez en `src/lib/legal/templates.ts` y se rellena con el bloque `legal`
+del tenant (razón social, NIF, dirección, email, días de devolución) más
+datos que ya existen: el dominio, los vendors de analítica (la política de
+cookies solo lista GA4/Plausible si la tienda los configura) y el login de
+clientes. Lo que falte aparece marcado como pendiente en la propia página.
+El CLI de alta acepta `--razon-social --nif --direccion --email
+--dias-devolucion`. El texto es una base razonable es-ES: la revisión final
+de cada tienda es de su abogado.
+
+### Consola de la factoría (/admin, fase 4)
+
+Panel único para TODAS las tiendas del deploy, protegido por `ADMIN_SECRET`
+(cookie httpOnly con token derivado sha256, comparaciones en tiempo
+constante; sin la variable, el panel queda deshabilitado). Muestra por
+tienda: dominios, data source, presencia de secretos (nunca sus valores),
+conexión REAL con Shopify (`{ shop { name } }` en vivo), analítica, login de
+clientes, estado de legales, theme y bloques. Incluye un validador de JSON
+de tenant (usa el mismo `hydrateTenant` del runtime) y el botón de recarga
+de la config remota cuando hay `TENANTS_URL`. `noindex` + disallow en
+robots.
+
 ### Alta de tienda nueva (provisioning)
 
 ```bash

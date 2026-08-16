@@ -151,6 +151,69 @@ test("la cuenta de cliente informa cuando la tienda no tiene login activado", as
   ).toBeVisible();
 });
 
+test("las páginas legales se rellenan con los datos del tenant", async ({ page }) => {
+  // Norte Atelier tiene el bloque legal completo y GA4 configurado
+  await page.goto("http://tienda-b.localhost:3100/legal/aviso-legal");
+  await expect(page.getByRole("heading", { level: 1, name: "Aviso legal" })).toBeVisible();
+  await expect(page.getByText("Norte Atelier S.L.").first()).toBeVisible();
+  await expect(page.getByText("B-00000000").first()).toBeVisible();
+
+  await page.goto("http://tienda-b.localhost:3100/legal/cookies");
+  await expect(page.getByText("Google Analytics 4", { exact: false })).toBeVisible();
+
+  await page.goto("http://tienda-b.localhost:3100/legal/devoluciones");
+  await expect(page.getByText("30 días naturales", { exact: false })).toBeVisible();
+
+  // Stellazon no tiene vendor: su política de cookies no lista terceros
+  await page.goto("/legal/cookies");
+  await expect(page.getByText("Google Analytics")).toHaveCount(0);
+  await expect(
+    page.getByText("no utiliza cookies de analítica ni de publicidad de terceros"),
+  ).toBeVisible();
+
+  // Enlaces legales en el footer
+  await page.goto("/");
+  await expect(
+    page.getByRole("contentinfo").getByRole("link", { name: "Política de privacidad" }),
+  ).toHaveAttribute("href", "/legal/privacidad");
+});
+
+test("la consola /admin protege el acceso y muestra la flota", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Consola de la factoría" })).toBeVisible();
+
+  // Clave incorrecta → error y sin datos
+  await page.getByLabel("Clave de acceso").fill("incorrecta");
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByText("Clave incorrecta.")).toBeVisible();
+
+  // Clave correcta (ADMIN_SECRET del webServer) → flota completa
+  await page.getByLabel("Clave de acceso").fill("test-admin");
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByRole("heading", { name: "Stellazon", exact: false })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Norte Atelier", exact: false }),
+  ).toBeVisible();
+
+  // El validador acepta un tenant válido y rechaza uno roto
+  const textarea = page.getByPlaceholder(/cliente-x/);
+  await textarea.fill(
+    JSON.stringify({
+      id: "prueba",
+      domain: "https://prueba.example.com",
+      branding: { name: "Prueba" },
+      theme: "theme-a",
+      shopify: { storeDomain: "prueba.myshopify.com" },
+    }),
+  );
+  await page.getByRole("button", { name: "Validar JSON" }).click();
+  await expect(page.getByText(/Válido ✓ — id "prueba"/)).toBeVisible();
+
+  await textarea.fill('{"id": "roto", "domain": "sin-protocolo"}');
+  await page.getByRole("button", { name: "Validar JSON" }).click();
+  await expect(page.getByText(/domain debe ser una URL/)).toBeVisible();
+});
+
 test("el laboratorio de diseño funciona con fixtures", async ({ page }) => {
   await page.goto("/dev/design-system");
   await expect(page.getByRole("heading", { level: 1, name: "Design System" })).toBeVisible();

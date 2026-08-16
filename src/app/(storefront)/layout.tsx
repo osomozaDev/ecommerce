@@ -11,6 +11,7 @@ import { organizationJsonLd } from "@/lib/seo/jsonld";
 import { AnalyticsScripts } from "@/lib/analytics/AnalyticsScripts";
 import { hasAnalyticsVendor } from "@/lib/analytics/consent";
 import { getConsent } from "@/lib/analytics/consent-server";
+import { legalNav } from "@/lib/legal/templates";
 
 /**
  * Layout del storefront: resuelve tenant, carrito inicial (cookie) y
@@ -45,6 +46,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
         shopName={tenant.branding.name}
         tagline={tenant.branding.tagline}
         nav={nav}
+        legalNav={legalNav()}
       />
       {hasAnalyticsVendor(tenant.analytics) && consent === null && (
         <ConsentBanner shopName={tenant.branding.name} />
