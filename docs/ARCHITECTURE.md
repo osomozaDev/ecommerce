@@ -205,6 +205,19 @@ verificado contra Stellazon); en fixtures, los productos que comparten
 colección primero. La ficha muestra "También te puede gustar" con el
 ProductGrid del theme; sin recomendaciones, sin sección.
 
+### Emails transaccionales (fase 4)
+
+Los emails de pedido los envía SHOPIFY (sus notificaciones no se pueden
+desactivar y su infraestructura ya firma SPF/DKIM); enviarlos nosotros
+duplicaría cada confirmación. La pieza de plataforma es el branding POR
+DATA: `src/lib/email/templates.ts` genera las plantillas (confirmación de
+pedido y envío) con los tokens del theme, el branding y las legales del
+tenant — HTML de email (tablas + estilos inline) con las variables Liquid
+de las notificaciones de Shopify. `/dev/emails` muestra el preview con
+datos de muestra y el código listo para pegar UNA vez por tienda en
+admin → Settings → Notifications → Customer notifications → "Edit code".
+Cambiar el theme del tenant re-brandea también sus emails.
+
 ### Páginas legales por plantilla (fase 4)
 
 `/legal/aviso-legal · privacidad · cookies · devoluciones`. La plantilla vive

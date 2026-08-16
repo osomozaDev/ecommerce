@@ -258,6 +258,22 @@ test("la consola /admin protege el acceso y muestra la flota", async ({ page }) 
   await expect(page.getByText(/domain debe ser una URL/)).toBeVisible();
 });
 
+test("los emails transaccionales se previsualizan brandeados por tenant", async ({ page }) => {
+  await page.goto("/dev/emails");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Emails transaccionales" }),
+  ).toBeVisible();
+
+  // El preview renderiza el email con datos de muestra dentro del iframe
+  const preview = page.frameLocator('iframe[title="Confirmación de pedido"]');
+  await expect(preview.getByText("¡Gracias por tu pedido!")).toBeVisible();
+  await expect(preview.getByText("#1001")).toBeVisible();
+
+  // El código Liquid está listo para pegar en Shopify
+  await page.getByText("Ver código Liquid", { exact: false }).first().click();
+  await expect(page.getByText("{% for line in subtotal_line_items %}")).toBeVisible();
+});
+
 test("el laboratorio de diseño funciona con fixtures", async ({ page }) => {
   await page.goto("/dev/design-system");
   await expect(page.getByRole("heading", { level: 1, name: "Design System" })).toBeVisible();
