@@ -186,6 +186,25 @@ registrar los callback URIs (`https://<dominio>/api/cuenta/callback` y
 URI (el dominio). Sin el bloque `customerAccount`, `/cuenta` explica que la
 tienda no tiene login y el header no muestra el enlace "Cuenta".
 
+### Wishlist (fase 4)
+
+Estado del visitante, como el carrito: handles de producto en la cookie
+httpOnly `wishlist` (180 días, máx. 100, validados contra un patrón).
+Lectura en `lib/wishlist/read.ts` (Server Components), escritura solo vía
+Server Action (`toggleWishlistAction`), y `useWishlist()` con toggle
+optimista reconciliado con la respuesta del servidor. UI: corazón en
+tarjetas y ficha (`components/storefront/wishlist/`), contador en el header
+y página `/favoritos` (noindex) que resuelve los handles con el provider.
+Evento `add_to_wishlist` (esquema GA4) al guardar.
+
+### Cross-sell (fase 4)
+
+`getRelatedProducts(productId)` en el contrato: en Shopify usa las
+recomendaciones nativas (`productRecommendations`, intent RELATED,
+verificado contra Stellazon); en fixtures, los productos que comparten
+colección primero. La ficha muestra "También te puede gustar" con el
+ProductGrid del theme; sin recomendaciones, sin sección.
+
 ### Páginas legales por plantilla (fase 4)
 
 `/legal/aviso-legal · privacidad · cookies · devoluciones`. La plantilla vive

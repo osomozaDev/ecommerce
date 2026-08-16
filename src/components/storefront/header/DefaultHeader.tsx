@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { CartWidget } from "@/components/storefront/cart/CartDrawer";
+import { WishlistLink } from "@/components/storefront/wishlist/WishlistLink";
 import { SearchBox } from "./SearchBox";
 import type { HeaderProps } from "./types";
 
@@ -24,6 +25,7 @@ export function DefaultHeader({ shopName, nav, accountHref }: HeaderProps) {
         </nav>
         <div className="flex items-center gap-4">
           <SearchBox />
+          <WishlistLink />
           {accountHref && (
             <Link
               href={accountHref}

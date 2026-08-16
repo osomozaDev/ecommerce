@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
+import { WishlistButton } from "@/components/storefront/wishlist/WishlistButton";
 import { ProductPurchase } from "./ProductPurchase";
 import type { ProductDetailProps } from "./types";
 
@@ -36,9 +37,12 @@ export function DefaultDetail({ product }: ProductDetailProps) {
               <Badge>{product.badge}</Badge>
             </div>
           )}
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance">
-            {product.title}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance">
+              {product.title}
+            </h1>
+            <WishlistButton product={product} className="shrink-0" />
+          </div>
         </div>
         <ProductPurchase product={product} />
         <p className="leading-relaxed text-muted">{product.description}</p>

@@ -116,6 +116,24 @@ export const fixturesProvider: CommerceProvider = {
     return summarizeReviews(fixtureReviews[handle] ?? []);
   },
 
+  async getRelatedProducts(productId, first = 4) {
+    const current = fixtureProducts.find((p) => p.id === productId);
+    if (!current) return [];
+    // Primero los que comparten colección; luego el resto del catálogo.
+    const sharedHandles = new Set(
+      Object.values(fixtureCollectionProducts)
+        .filter((handles) => handles.includes(current.handle))
+        .flat(),
+    );
+    const related = fixtureProducts.filter(
+      (p) => p.id !== productId && sharedHandles.has(p.handle),
+    );
+    const rest = fixtureProducts.filter(
+      (p) => p.id !== productId && !sharedHandles.has(p.handle),
+    );
+    return [...related, ...rest].slice(0, first);
+  },
+
   async createCart() {
     const cart: Cart = {
       id: `fx-cart-${randomUUID()}`,

@@ -20,6 +20,7 @@ import {
 } from "./queries/collections";
 import { GET_CART_QUERY } from "./queries/cart";
 import { GET_REVIEWS_QUERY } from "./queries/reviews";
+import { GET_PRODUCT_RECOMMENDATIONS_QUERY } from "./queries/recommendations";
 import {
   CART_CREATE_MUTATION,
   CART_LINES_ADD_MUTATION,
@@ -207,6 +208,26 @@ export const shopifyProvider: CommerceProvider = {
       // Fail-safe: tienda sin el metaobjeto "review" (o sin acceso Storefront
       // al mismo) = tienda sin reseñas. Nunca rompe la ficha de producto.
       return summarizeReviews([]);
+    }
+  },
+
+  async getRelatedProducts(productId, first = 4) {
+    const tenant = await getTenant();
+    try {
+      const data = await shopifyFetch<{
+        productRecommendations: ShopifyProduct[] | null;
+      }>({
+        query: GET_PRODUCT_RECOMMENDATIONS_QUERY,
+        variables: { productId },
+        tags: [CACHE_TAGS.products(tenant.id)],
+        tenant,
+      });
+      return (data.productRecommendations ?? [])
+        .slice(0, first)
+        .map((p) => mapProduct(p, tenant.locale));
+    } catch {
+      // Sin recomendaciones (catálogo pequeño, id desconocido…): sin sección.
+      return [];
     }
   },
 

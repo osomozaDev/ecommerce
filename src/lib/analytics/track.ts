@@ -13,6 +13,7 @@ import type { Cart, CartLine, Product, ProductVariant } from "@/lib/commerce/typ
 export type AnalyticsEventName =
   | "view_item"
   | "add_to_cart"
+  | "add_to_wishlist"
   | "remove_from_cart"
   | "begin_checkout"
   | "search";
@@ -75,6 +76,14 @@ export function trackAddToCart(product: Product, variant: ProductVariant, quanti
     currency: variant.price.currencyCode,
     value: variant.price.amount * quantity,
     items: [ga4Item(product, variant, quantity)],
+  });
+}
+
+export function trackAddToWishlist(product: Product) {
+  track("add_to_wishlist", {
+    currency: product.price.currencyCode,
+    value: product.price.amount,
+    items: [ga4Item(product)],
   });
 }
 

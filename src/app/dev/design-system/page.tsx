@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { CartProvider } from "@/lib/cart/cart-context";
+import { WishlistProvider } from "@/lib/wishlist/wishlist-context";
 import { fixtureProducts } from "@/fixtures/products";
 import { fixtureCart, emptyFixtureCart } from "@/fixtures/cart";
 import { Container } from "@/components/ui/Container";
@@ -88,6 +89,7 @@ export default function DesignSystemPage() {
 
   return (
     <CartProvider initialCart={fixtureCart}>
+      <WishlistProvider initialHandles={[]}>
       <div className="pb-24">
         <div className="border-b border-line bg-surface">
           <Container className="flex flex-col gap-3 py-10">
@@ -276,6 +278,7 @@ export default function DesignSystemPage() {
           </Section>
         </Container>
       </div>
+      </WishlistProvider>
     </CartProvider>
   );
 }

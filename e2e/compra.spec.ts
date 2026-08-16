@@ -151,6 +151,50 @@ test("la cuenta de cliente informa cuando la tienda no tiene login activado", as
   ).toBeVisible();
 });
 
+test("wishlist: guardar, contador, /favoritos y quitar", async ({ page }) => {
+  await page.goto("/productos/vela-ambar");
+  // Guardar desde la ficha → contador del header al instante. Se espera al
+  // POST de la Server Action para que la cookie exista antes de navegar.
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST"),
+    page
+      .getByRole("main")
+      .getByRole("button", { name: "Guardar en favoritos" })
+      .first()
+      .click(),
+  ]);
+  await expect(page.getByRole("banner").getByRole("link", { name: /Favoritos \(1\)/ })).toBeVisible();
+
+  // El evento add_to_wishlist llega al dataLayer con el payload GA4
+  const evento = await page.evaluate(() =>
+    ((window as unknown as { dataLayer?: Record<string, unknown>[] }).dataLayer ?? []).find(
+      (e) => e.event === "add_to_wishlist",
+    ),
+  );
+  expect(evento).toMatchObject({ currency: "EUR", value: 24 });
+
+  // /favoritos muestra el producto guardado (persistido en cookie)
+  await page.getByRole("banner").getByRole("link", { name: /Favoritos/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /Vela aromática Ámbar/ })).toBeVisible();
+
+  // Quitar desde la tarjeta → tras recargar, vacío
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST"),
+    page.getByRole("main").getByRole("button", { name: "Quitar de favoritos" }).click(),
+  ]);
+  await page.reload();
+  await expect(page.getByText("Aún no has guardado nada.", { exact: false })).toBeVisible();
+});
+
+test("la ficha muestra productos relacionados (cross-sell)", async ({ page }) => {
+  await page.goto("/productos/vela-ambar");
+  const related = page.getByRole("region", { name: "Productos relacionados" });
+  await expect(related.getByRole("heading", { name: "También te puede gustar" })).toBeVisible();
+  await expect(related.getByRole("link", { name: /Lámpara Arco/ })).toBeVisible();
+  await expect(related.getByRole("link", { name: /Vela aromática/ })).toHaveCount(0);
+});
+
 test("las páginas legales se rellenan con los datos del tenant", async ({ page }) => {
   // Norte Atelier tiene el bloque legal completo y GA4 configurado
   await page.goto("http://tienda-b.localhost:3100/legal/aviso-legal");

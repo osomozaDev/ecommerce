@@ -168,4 +168,7 @@ aparece en tiendas con analítica de terceros configurada — al restilizarlo,
 conserva los dos botones y las llamadas a `setConsentClient`), `footer`.
 Además, `cart/CartDrawer.tsx` es el botón + panel lateral
 del carrito que usa el header: es tuyo para restilizar (usa `useCart()`, no
-toca Shopify).
+toca Shopify). En `wishlist/` viven `WishlistButton` (el corazón de
+tarjetas y ficha; funciona dentro de un `<Link>` sin navegar) y
+`WishlistLink` (contador del header): restilízalos libremente usando
+`useWishlist()` — nunca toques la cookie a mano.

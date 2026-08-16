@@ -3,6 +3,8 @@ import { getTenant } from "@/lib/tenant/resolve";
 import { getCommerce } from "@/lib/commerce/provider";
 import { getCartAction } from "@/lib/cart/actions";
 import { CartProvider } from "@/lib/cart/cart-context";
+import { readWishlist } from "@/lib/wishlist/read";
+import { WishlistProvider } from "@/lib/wishlist/wishlist-context";
 import { Header } from "@/components/storefront/header";
 import { Footer } from "@/components/storefront/footer";
 import { ConsentBanner } from "@/components/storefront/consent-banner";
@@ -20,10 +22,11 @@ import { legalNav } from "@/lib/legal/templates";
  */
 export default async function StorefrontLayout({ children }: { children: ReactNode }) {
   const tenant = await getTenant();
-  const [initialCart, collections, consent] = await Promise.all([
+  const [initialCart, collections, consent, wishlist] = await Promise.all([
     getCartAction(),
     getCommerce().getCollections(),
     getConsent(),
+    readWishlist(),
   ]);
 
   const nav = [
@@ -34,6 +37,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
 
   return (
     <CartProvider initialCart={initialCart}>
+      <WishlistProvider initialHandles={wishlist}>
       <JsonLd data={organizationJsonLd(tenant)} />
       <AnalyticsScripts tenant={tenant} />
       <Header
@@ -51,6 +55,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
       {hasAnalyticsVendor(tenant.analytics) && consent === null && (
         <ConsentBanner shopName={tenant.branding.name} />
       )}
+      </WishlistProvider>
     </CartProvider>
   );
 }

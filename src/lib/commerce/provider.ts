@@ -54,6 +54,12 @@ export interface CommerceProvider {
   /** Reseñas del producto. Siempre resuelve (sin reseñas → agregado vacío). */
   getProductReviews(handle: string): Promise<ProductReviews>;
 
+  /**
+   * Cross-sell: productos relacionados con uno dado (por id de producto).
+   * Siempre resuelve; sin recomendaciones → array vacío.
+   */
+  getRelatedProducts(productId: string, first?: number): Promise<Product[]>;
+
   createCart(): Promise<Cart>;
   getCart(cartId: string): Promise<Cart | null>;
   addCartLines(cartId: string, lines: CartLineInput[]): Promise<Cart>;
@@ -84,6 +90,7 @@ export function getCommerce(): CommerceProvider {
     getCollections: async () => (await pickProvider()).getCollections(),
     getCollection: async (h, o) => (await pickProvider()).getCollection(h, o),
     getProductReviews: async (h) => (await pickProvider()).getProductReviews(h),
+    getRelatedProducts: async (id, f) => (await pickProvider()).getRelatedProducts(id, f),
     createCart: async () => (await pickProvider()).createCart(),
     getCart: async (id) => (await pickProvider()).getCart(id),
     addCartLines: async (id, l) => (await pickProvider()).addCartLines(id, l),

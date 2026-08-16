@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Price } from "@/components/ui/Price";
+import { WishlistButton } from "@/components/storefront/wishlist/WishlistButton";
 import type { ProductCardProps } from "./types";
 
 export function DefaultCard({ product }: ProductCardProps) {
@@ -23,6 +24,7 @@ export function DefaultCard({ product }: ProductCardProps) {
             <Badge>{product.badge}</Badge>
           </div>
         )}
+        <WishlistButton product={product} className="absolute top-3 right-3" />
         {!product.available && (
           <div className="absolute inset-0 flex items-center justify-center bg-bg/60 text-sm font-medium">
             Agotado

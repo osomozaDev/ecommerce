@@ -74,3 +74,19 @@ describe("fixturesProvider · paginación", () => {
     expect(page.hasNextPage).toBe(false);
   });
 });
+
+describe("getRelatedProducts (fixtures)", () => {
+  it("prioriza productos de las mismas colecciones y excluye el actual", async () => {
+    // vela-ambar está en novedades + iluminacion
+    const related = await fixturesProvider.getRelatedProducts("fx-prod-vela-ambar");
+    expect(related).toHaveLength(4);
+    expect(related.some((p) => p.handle === "vela-ambar")).toBe(false);
+    // lampara-arco comparte ambas colecciones con la vela
+    expect(related.some((p) => p.handle === "lampara-arco")).toBe(true);
+  });
+
+  it("respeta el límite y resuelve con id desconocido", async () => {
+    expect(await fixturesProvider.getRelatedProducts("fx-prod-vela-ambar", 2)).toHaveLength(2);
+    expect(await fixturesProvider.getRelatedProducts("fx-prod-inexistente")).toEqual([]);
+  });
+});

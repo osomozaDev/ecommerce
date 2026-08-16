@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Container } from "@/components/ui/Container";
 import { ProductDetail } from "@/components/storefront/product-detail";
+import { ProductGrid } from "@/components/storefront/product-grid";
 import { Reviews } from "@/components/storefront/reviews";
 import { getCommerce } from "@/lib/commerce/provider";
 import { getTenant } from "@/lib/tenant/resolve";
@@ -35,7 +37,10 @@ export default async function ProductoPage({ params }: Props) {
     getCommerce().getProductReviews(handle),
   ]);
   if (!product) notFound();
-  const tenant = await getTenant();
+  const [tenant, related] = await Promise.all([
+    getTenant(),
+    getCommerce().getRelatedProducts(product.id),
+  ]);
   return (
     <>
       <JsonLd data={productJsonLd(product, tenant, reviews)} />
@@ -43,6 +48,16 @@ export default async function ProductoPage({ params }: Props) {
       <TrackViewItem product={product} />
       <ProductDetail product={product} />
       <Reviews reviews={reviews} />
+      {related.length > 0 && (
+        <section aria-label="Productos relacionados">
+          <Container className="border-t border-line py-10">
+            <h2 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
+              También te puede gustar
+            </h2>
+            <ProductGrid products={related} />
+          </Container>
+        </section>
+      )}
     </>
   );
 }
