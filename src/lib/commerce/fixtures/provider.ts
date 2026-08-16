@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import type { Cart, CartLine, Product } from "../types";
+import { getMarket } from "@/lib/tenant/market";
+import type { Cart, CartLine, Money, Product } from "../types";
 import type {
   CartLineInput,
   CatalogFilters,
@@ -39,6 +40,29 @@ function recompute(cart: Cart): Cart {
   };
 }
 
+// Los fixtures se construyen formateados en es-ES; si la request llega por
+// el dominio de otro mercado, se reformatea el precio con SU locale (misma
+// semántica que @inContext en el provider de Shopify, sin cambiar importes).
+const FIXTURES_LOCALE = "es-ES";
+
+function localizeMoney(m: Money, locale: string): Money {
+  return money(m.amount, m.currencyCode, locale);
+}
+
+function localizeProduct(p: Product, locale: string): Product {
+  if (locale === FIXTURES_LOCALE) return p;
+  return {
+    ...p,
+    price: localizeMoney(p.price, locale),
+    compareAtPrice: p.compareAtPrice && localizeMoney(p.compareAtPrice, locale),
+    variants: p.variants.map((v) => ({
+      ...v,
+      price: localizeMoney(v.price, locale),
+      compareAtPrice: v.compareAtPrice && localizeMoney(v.compareAtPrice, locale),
+    })),
+  };
+}
+
 function applyFilters(products: Product[], f?: CatalogFilters): Product[] {
   return products.filter((p) => {
     if (f?.available && !p.available) return false;
@@ -73,15 +97,18 @@ export const fixturesProvider: CommerceProvider = {
     const first = options?.first ?? 24;
     const page = products.slice(offset, offset + first);
     const end = offset + page.length;
+    const market = await getMarket();
     return {
-      products: page,
+      products: page.map((p) => localizeProduct(p, market.locale)),
       hasNextPage: end < products.length,
       endCursor: page.length > 0 ? String(end) : null,
     };
   },
 
   async getProduct(handle) {
-    return findFixtureProduct(handle) ?? null;
+    const product = findFixtureProduct(handle);
+    if (!product) return null;
+    return localizeProduct(product, (await getMarket()).locale);
   },
 
   async getCollections() {
@@ -104,9 +131,10 @@ export const fixturesProvider: CommerceProvider = {
     const first = options?.first ?? 24;
     const page = all.slice(offset, offset + first);
     const end = offset + page.length;
+    const market = await getMarket();
     return {
       collection,
-      products: page,
+      products: page.map((p) => localizeProduct(p, market.locale)),
       hasNextPage: end < all.length,
       endCursor: page.length > 0 ? String(end) : null,
     };
@@ -131,7 +159,10 @@ export const fixturesProvider: CommerceProvider = {
     const rest = fixtureProducts.filter(
       (p) => p.id !== productId && !sharedHandles.has(p.handle),
     );
-    return [...related, ...rest].slice(0, first);
+    const market = await getMarket();
+    return [...related, ...rest]
+      .slice(0, first)
+      .map((p) => localizeProduct(p, market.locale));
   },
 
   async createCart() {

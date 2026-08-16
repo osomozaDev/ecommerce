@@ -85,6 +85,24 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     fail(id, "customerAccount requiere shopId y clientId (strings no vacíos)");
   }
 
+  const markets = t.markets as TenantConfig["markets"] | undefined;
+  if (markets) {
+    if (
+      markets.defaultCountry !== undefined &&
+      !/^[A-Z]{2}$/.test(String(markets.defaultCountry))
+    ) {
+      fail(id, `markets.defaultCountry debe ser ISO 3166-1 alpha-2 (ej. "ES")`);
+    }
+    for (const m of markets.markets ?? []) {
+      if (!m.id || !m.locale || !/^[A-Z]{2}$/.test(String(m.country))) {
+        fail(id, `mercado inválido: requiere id, locale y country alpha-2`);
+      }
+      if (!Array.isArray(m.domains) || m.domains.length === 0) {
+        fail(id, `mercado "${m.id}": requiere al menos un dominio`);
+      }
+    }
+  }
+
   const legal = t.legal as { companyName?: unknown } | undefined;
   if (legal && (typeof legal.companyName !== "string" || !legal.companyName)) {
     fail(id, "legal requiere companyName (razón social)");
@@ -100,10 +118,15 @@ export function hydrateTenant(raw: unknown): TenantConfig {
     slug: typeof t.slug === "string" ? t.slug : id,
     domain: t.domain,
     dataSource: dataSource as TenantConfig["dataSource"],
-    domains: Array.isArray(t.domains) ? (t.domains as string[]) : undefined,
+    // Los dominios de los mercados también resuelven a este tenant.
+    domains: [
+      ...(Array.isArray(t.domains) ? (t.domains as string[]) : []),
+      ...(markets?.markets ?? []).flatMap((m) => m.domains),
+    ],
     locale: typeof t.locale === "string" ? t.locale : "es-ES",
     branding: t.branding as TenantConfig["branding"],
     analytics: t.analytics as TenantConfig["analytics"],
+    markets,
     customerAccount: customerAccount as TenantConfig["customerAccount"],
     legal: legal as TenantConfig["legal"],
     theme,

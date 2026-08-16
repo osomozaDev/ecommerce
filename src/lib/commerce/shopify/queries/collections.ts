@@ -1,7 +1,7 @@
 import { COLLECTION_FRAGMENT, IMAGE_FRAGMENT, PRODUCT_FRAGMENT } from "./fragments";
 
 export const GET_COLLECTIONS_QUERY = /* GraphQL */ `
-  query GetCollections($first: Int!) {
+  query GetCollections($first: Int!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) {
     collections(first: $first) {
       nodes {
         ...CollectionFields
@@ -20,7 +20,9 @@ export const GET_COLLECTION_BY_HANDLE_QUERY = /* GraphQL */ `
     $filters: [ProductFilter!]
     $sortKey: ProductCollectionSortKeys
     $reverse: Boolean
-  ) {
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       ...CollectionFields
       products(

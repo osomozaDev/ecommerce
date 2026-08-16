@@ -12,6 +12,18 @@
   "analytics": {
     "ga4MeasurementId": "G-DEMO000000"
   },
+  "markets": {
+    "defaultCountry": "ES",
+    "markets": [
+      {
+        "id": "uk",
+        "country": "GB",
+        "language": "EN",
+        "locale": "en-GB",
+        "domains": ["tienda-b-uk.localhost", "uk.norte-atelier.example.com"]
+      }
+    ]
+  },
   "legal": {
     "companyName": "Norte Atelier S.L.",
     "taxId": "B-00000000",

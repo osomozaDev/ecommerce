@@ -180,6 +180,12 @@ export default async function AdminPage({ searchParams }: Props) {
                     .filter(Boolean)
                     .join(" + ") || "— (solo dataLayer)"}
                 </dd>
+                <dt className="text-muted">Mercados</dt>
+                <dd>
+                  {tenant.markets?.markets?.length
+                    ? `principal${tenant.markets.defaultCountry ? ` (${tenant.markets.defaultCountry})` : ""} + ${tenant.markets.markets.map((m) => `${m.id} (${m.country})`).join(", ")}`
+                    : "— (mercado único)"}
+                </dd>
                 <dt className="text-muted">Login clientes</dt>
                 <dd>{tenant.customerAccount ? "✓ activado" : "—"}</dd>
                 <dt className="text-muted">Legales</dt>

@@ -7,6 +7,7 @@ import { ThemeStyle } from "@/theme/ThemeStyle";
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await getTenant();
   const { name, tagline } = tenant.branding;
+  const markets = tenant.markets?.markets ?? [];
   return {
     metadataBase: new URL(tenant.domain),
     title: {
@@ -14,6 +15,18 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${name}`,
     },
     description: tagline,
+    // hreflang: cada mercado vive en su dominio (mismo deploy).
+    alternates:
+      markets.length > 0
+        ? {
+            languages: {
+              [tenant.locale]: tenant.domain,
+              ...Object.fromEntries(
+                markets.map((m) => [m.locale, `https://${m.domains[0]}`]),
+              ),
+            },
+          }
+        : undefined,
   };
 }
 

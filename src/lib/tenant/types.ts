@@ -57,6 +57,27 @@ export interface TenantConfig {
    * viven UNA vez en el engine (lib/legal) y se rellenan con este bloque;
    * lo que falte se señala en la página como pendiente de configurar.
    */
+  /**
+   * Shopify Markets (i18n): venta en varios países/monedas/idiomas.
+   * Cada mercado adicional se resuelve POR DOMINIO (como los tenants) y
+   * aplica `@inContext(country, language)` a la Storefront API: precios en
+   * la moneda del mercado y contenido traducido si existe en Shopify.
+   */
+  markets?: {
+    /** País del mercado principal (ISO 3166-1 alpha-2), ej. "ES". */
+    defaultCountry?: string;
+    markets?: {
+      id: string;
+      /** ISO 3166-1 alpha-2, ej. "GB". */
+      country: string;
+      /** LanguageCode de Shopify, ej. "EN". Si falta, se deriva del locale. */
+      language?: string;
+      /** Locale de formateo, ej. "en-GB". */
+      locale: string;
+      /** Hostnames que activan este mercado (se añaden a los del tenant). */
+      domains: string[];
+    }[];
+  };
   legal?: {
     /** Razón social del titular de la tienda. */
     companyName: string;

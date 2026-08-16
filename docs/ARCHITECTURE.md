@@ -205,6 +205,33 @@ verificado contra Stellazon); en fixtures, los productos que comparten
 colección primero. La ficha muestra "También te puede gustar" con el
 ProductGrid del theme; sin recomendaciones, sin sección.
 
+### i18n / Shopify Markets (fase 4)
+
+Venta en varios países/monedas con la MISMA mecánica que el multi-tenant:
+un mercado = un dominio. El tenant define:
+
+```json
+"markets": {
+  "defaultCountry": "ES",
+  "markets": [
+    { "id": "uk", "country": "GB", "language": "EN", "locale": "en-GB",
+      "domains": ["uk.tienda.com"] }
+  ]
+}
+```
+
+`getMarket()` resuelve el mercado por Host (los dominios de mercado se
+fusionan con los del tenant en la hidratación) y TODAS las queries de la
+Storefront API llevan `@inContext(country, language)`: precios en la moneda
+del mercado, contenido traducido si existe en Shopify, y carrito creado con
+`buyerIdentity.countryCode` (el checkout sale en la moneda correcta). Los
+precios se formatean con el locale del mercado (también en fixtures). El
+layout emite `hreflang` hacia el primer dominio de cada mercado (poner el
+real primero). Si la tienda no tiene ese mercado activo en el admin
+(Settings → Markets), Shopify degrada al mercado por defecto sin romper.
+Nota: los mercados cambian datos y formato; los textos de la UI siguen en
+el idioma del design system (catálogo de mensajes = pieza futura con Javi).
+
 ### Emails transaccionales (fase 4)
 
 Los emails de pedido los envía SHOPIFY (sus notificaciones no se pueden

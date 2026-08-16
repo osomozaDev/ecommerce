@@ -1,5 +1,6 @@
 import "server-only";
 import { getTenant } from "@/lib/tenant/resolve";
+import { getMarket } from "@/lib/tenant/market";
 import type { CommerceProvider, GetProductsOptions } from "../provider";
 import { CACHE_TAGS, shopifyFetch } from "./client";
 import { summarizeReviews } from "../reviews";
@@ -108,6 +109,7 @@ function unwrapCart(payload: CartMutationPayload, operation: string): ShopifyCar
 export const shopifyProvider: CommerceProvider = {
   async getProducts(options?: GetProductsOptions) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const sort = options?.sort ? SORT_MAP[options.sort] : undefined;
     const data = await shopifyFetch<{
       products: { nodes: ShopifyProduct[]; pageInfo: PageInfo };
@@ -119,12 +121,14 @@ export const shopifyProvider: CommerceProvider = {
         query: buildProductQuery(options),
         sortKey: sort?.sortKey,
         reverse: sort?.reverse,
+        country: market.country,
+        language: market.language,
       },
       tags: [CACHE_TAGS.products(tenant.id)],
       tenant,
     });
     return {
-      products: data.products.nodes.map((p) => mapProduct(p, tenant.locale)),
+      products: data.products.nodes.map((p) => mapProduct(p, market.locale)),
       hasNextPage: data.products.pageInfo.hasNextPage,
       endCursor: data.products.pageInfo.endCursor,
     };
@@ -132,20 +136,22 @@ export const shopifyProvider: CommerceProvider = {
 
   async getProduct(handle) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{ product: ShopifyProduct | null }>({
       query: GET_PRODUCT_BY_HANDLE_QUERY,
-      variables: { handle },
+      variables: { handle, country: market.country, language: market.language },
       tags: [CACHE_TAGS.products(tenant.id), CACHE_TAGS.product(tenant.id, handle)],
       tenant,
     });
-    return data.product ? mapProduct(data.product, tenant.locale) : null;
+    return data.product ? mapProduct(data.product, market.locale) : null;
   },
 
   async getCollections() {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{ collections: { nodes: ShopifyCollection[] } }>({
       query: GET_COLLECTIONS_QUERY,
-      variables: { first: 20 },
+      variables: { first: 20, country: market.country, language: market.language },
       tags: [CACHE_TAGS.collections(tenant.id)],
       tenant,
     });
@@ -154,6 +160,7 @@ export const shopifyProvider: CommerceProvider = {
 
   async getCollection(handle, options) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{
       collection:
         | (ShopifyCollection & {
@@ -169,6 +176,8 @@ export const shopifyProvider: CommerceProvider = {
         filters: buildCollectionFilters(options),
         sortKey: options?.sort ? COLLECTION_SORT_MAP[options.sort].sortKey : undefined,
         reverse: options?.sort ? COLLECTION_SORT_MAP[options.sort].reverse : undefined,
+        country: market.country,
+        language: market.language,
       },
       tags: [
         CACHE_TAGS.collections(tenant.id),
@@ -180,7 +189,7 @@ export const shopifyProvider: CommerceProvider = {
     return {
       collection: mapCollection(data.collection),
       products: data.collection.products.nodes.map((p) =>
-        mapProduct(p, tenant.locale),
+        mapProduct(p, market.locale),
       ),
       hasNextPage: data.collection.products.pageInfo.hasNextPage,
       endCursor: data.collection.products.pageInfo.endCursor,
@@ -189,6 +198,7 @@ export const shopifyProvider: CommerceProvider = {
 
   async getProductReviews(handle) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     try {
       const data = await shopifyFetch<{
         metaobjects: { nodes: ShopifyMetaobject[] };
@@ -199,7 +209,7 @@ export const shopifyProvider: CommerceProvider = {
         tenant,
       });
       const reviews = data.metaobjects.nodes
-        .map((n) => mapReviewMetaobject(n, tenant.locale))
+        .map((n) => mapReviewMetaobject(n, market.locale))
         .filter((r) => r !== null)
         .filter((r) => r.productHandle === handle)
         .map((r) => r.review);
@@ -213,18 +223,19 @@ export const shopifyProvider: CommerceProvider = {
 
   async getRelatedProducts(productId, first = 4) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     try {
       const data = await shopifyFetch<{
         productRecommendations: ShopifyProduct[] | null;
       }>({
         query: GET_PRODUCT_RECOMMENDATIONS_QUERY,
-        variables: { productId },
+        variables: { productId, country: market.country, language: market.language },
         tags: [CACHE_TAGS.products(tenant.id)],
         tenant,
       });
       return (data.productRecommendations ?? [])
         .slice(0, first)
-        .map((p) => mapProduct(p, tenant.locale));
+        .map((p) => mapProduct(p, market.locale));
     } catch {
       // Sin recomendaciones (catálogo pequeño, id desconocido…): sin sección.
       return [];
@@ -233,55 +244,70 @@ export const shopifyProvider: CommerceProvider = {
 
   async createCart() {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{ cartCreate: CartMutationPayload }>({
       query: CART_CREATE_MUTATION,
+      variables: {
+        buyerIdentity: market.country ? { countryCode: market.country } : undefined,
+        country: market.country,
+        language: market.language,
+      },
       cache: "no-store",
       tenant,
     });
-    return mapCart(unwrapCart(data.cartCreate, "cartCreate"), tenant.locale);
+    return mapCart(unwrapCart(data.cartCreate, "cartCreate"), market.locale);
   },
 
   async getCart(cartId) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{ cart: ShopifyCart | null }>({
       query: GET_CART_QUERY,
-      variables: { cartId },
+      variables: { cartId, country: market.country, language: market.language },
       cache: "no-store",
       tenant,
     });
-    return data.cart ? mapCart(data.cart, tenant.locale) : null;
+    return data.cart ? mapCart(data.cart, market.locale) : null;
   },
 
   async addCartLines(cartId, lines) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{ cartLinesAdd: CartMutationPayload }>({
       query: CART_LINES_ADD_MUTATION,
-      variables: { cartId, lines },
+      variables: { cartId, lines, country: market.country, language: market.language },
       cache: "no-store",
       tenant,
     });
-    return mapCart(unwrapCart(data.cartLinesAdd, "cartLinesAdd"), tenant.locale);
+    return mapCart(unwrapCart(data.cartLinesAdd, "cartLinesAdd"), market.locale);
   },
 
   async updateCartLine(cartId, lineId, quantity) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{ cartLinesUpdate: CartMutationPayload }>({
       query: CART_LINES_UPDATE_MUTATION,
-      variables: { cartId, lines: [{ id: lineId, quantity }] },
+      variables: {
+        cartId,
+        lines: [{ id: lineId, quantity }],
+        country: market.country,
+        language: market.language,
+      },
       cache: "no-store",
       tenant,
     });
-    return mapCart(unwrapCart(data.cartLinesUpdate, "cartLinesUpdate"), tenant.locale);
+    return mapCart(unwrapCart(data.cartLinesUpdate, "cartLinesUpdate"), market.locale);
   },
 
   async removeCartLines(cartId, lineIds) {
     const tenant = await getTenant();
+    const market = await getMarket(tenant);
     const data = await shopifyFetch<{ cartLinesRemove: CartMutationPayload }>({
       query: CART_LINES_REMOVE_MUTATION,
-      variables: { cartId, lineIds },
+      variables: { cartId, lineIds, country: market.country, language: market.language },
       cache: "no-store",
       tenant,
     });
-    return mapCart(unwrapCart(data.cartLinesRemove, "cartLinesRemove"), tenant.locale);
+    return mapCart(unwrapCart(data.cartLinesRemove, "cartLinesRemove"), market.locale);
   },
 };

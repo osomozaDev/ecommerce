@@ -7,7 +7,9 @@ export const GET_PRODUCTS_QUERY = /* GraphQL */ `
     $query: String
     $sortKey: ProductSortKeys
     $reverse: Boolean
-  ) {
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     products(
       first: $first
       after: $after
@@ -28,7 +30,7 @@ export const GET_PRODUCTS_QUERY = /* GraphQL */ `
 `;
 
 export const GET_PRODUCT_BY_HANDLE_QUERY = /* GraphQL */ `
-  query GetProductByHandle($handle: String!) {
+  query GetProductByHandle($handle: String!, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) {
     product(handle: $handle) {
       ...ProductFields
     }

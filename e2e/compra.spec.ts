@@ -258,6 +258,17 @@ test("la consola /admin protege el acceso y muestra la flota", async ({ page }) 
   await expect(page.getByText(/domain debe ser una URL/)).toBeVisible();
 });
 
+test("un dominio de mercado sirve la misma tienda con su locale (Markets)", async ({ page }) => {
+  // Mercado por defecto (es-ES): precio con formato español
+  await page.goto("http://tienda-b.localhost:3100/productos/vela-ambar");
+  await expect(page.getByText("24,00").first()).toBeVisible();
+
+  // Mercado "uk" por dominio: misma tienda, mismo importe, formato en-GB
+  await page.goto("http://tienda-b-uk.localhost:3100/productos/vela-ambar");
+  await expect(page.getByRole("banner").getByText("Norte Atelier")).toBeVisible();
+  await expect(page.getByText("€24.00").first()).toBeVisible();
+});
+
 test("los emails transaccionales se previsualizan brandeados por tenant", async ({ page }) => {
   await page.goto("/dev/emails");
   await expect(
